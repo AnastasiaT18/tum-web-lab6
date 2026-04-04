@@ -9,4 +9,6 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  base: '/tum-web-lab6/'
+
 })

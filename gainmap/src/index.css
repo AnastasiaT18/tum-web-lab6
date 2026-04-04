@@ -1,1 +1,12 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+* {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  @theme {
+    --font-sans: 'Plus Jakarta Sans', sans-serif;
+    --color-brand: oklch(38% 0.189 293.745);
+
+  }
