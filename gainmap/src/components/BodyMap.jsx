@@ -3,12 +3,34 @@ import { useState } from 'react';
 
 function BodyMap({ workouts = [] }) {
     const [side, setSide] = useState("front")
+    const [selectedPart, setSelectedPart] = useState(null);
+    const [workoutData, setWorkoutData] = useState({});
+
+
+    // transform workoutData → array format for <Body>
+    const bodyData = Object.entries(workoutData).map(([slug, intensity]) => ({
+        slug,
+        intensity: Math.min(intensity, 3)
+    }))
+
+
+    const handlePartClick = (part) => {
+        setSelectedPart(part)
+        if(part.slug){
+            setWorkoutData((prev)=>({
+                ...prev,
+                [part.slug]: (prev[part.slug] || 0) + 1
+            }));
+        }
+        };
+        console.log("current workoutData:", workoutData)
+
 
     return (
         <div className="flex flex-col items-center gap-4">
 
         {/* Front/Back Toggle*/}
-        <div classNam="flex gap-4">
+        <div className="flex gap-4">
             <button onClick={() => setSide("front")}
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors
                     ${side === "front"
@@ -29,11 +51,12 @@ function BodyMap({ workouts = [] }) {
         </div>
 
         <Body
-          data={workouts}
+          data={bodyData}          
           side={side}
           gender="female"
-          colors={["#ff6b6b", "#ffa500", "#ffd700"]}
+          colors={["#ffd700", "#ffa500", " #ff6b6b"]}
           scale={1.5}
+          onBodyPartPress={handlePartClick}
         />
 
         </div>
