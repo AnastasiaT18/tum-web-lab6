@@ -1,5 +1,6 @@
 import {useState, useEffect } from "react"
 import Navbar from "./components/Navbar"
+import BodyMap from "./components/BodyMap"
 
 function App() {
 
@@ -16,7 +17,7 @@ function App() {
 
         {/* left side-body map */} 
         <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6">
-          <p className="text-stone-400 dark:text-stone-500">Body map coming soon...</p>
+          <BodyMap workouts={[]} />
         </div>
 
         {/* right side - stats*/}
