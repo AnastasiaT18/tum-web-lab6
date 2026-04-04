@@ -1,9 +1,9 @@
 function Navbar({darkMode, setDarkMode}) {
     return (
-        <nav className="max-w-full mx-auto mb-8 bg-stone-50 dark:bg-stone-900 p-4">
+        <nav className="max-w-full mx-auto bg-stone-50 dark:bg-stone-900 px-6 py-8 ">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-medium text-stone-800 dark:text-stone-100">Gain<span className="text-orange-400">Map</span></h1>
+                    <h1 className="text-4xl font-medium text-stone-800 dark:text-stone-100">Gain<span className="text-brand">Map</span></h1>
                     <p className="text-sm text-stone-800  dark:text-stone-100">Track your fitness journey</p>
                 </div>
 

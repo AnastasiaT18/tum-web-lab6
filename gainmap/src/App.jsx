@@ -10,9 +10,9 @@ function App() {
   }, [darkMode])
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-stone-900 transition-colors duration-300">
+    <div className="font-sans min-h-screen bg-stone-50 dark:bg-stone-900 transition-colors duration-300">
       <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-      <main className="max-w-full mx-auto px-4 py-6 grid lg:grid-cols-2 gap-6">
+      <main className="max-w-full mx-auto px-6  grid lg:grid-cols-2 gap-6">
 
         {/* left side-body map */} 
         <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6">
