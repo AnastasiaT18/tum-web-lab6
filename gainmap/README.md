@@ -1,16 +1,36 @@
-# React + Vite
+# GainMap 💪
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A client-side workout tracking app with an interactive muscle body map.
+Log your workouts, visualize which muscles you've trained, and track your consistency over time.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### Entities (Workouts)
+- Add a workout by selecting exercises from a predefined list
+- Each exercise automatically maps to the muscles it targets
+- Remove workouts from your history
+- Like/favorite workouts
+- Filter workouts by muscle group or date
 
-## React Compiler
+### Body Map
+- Interactive SVG human body (front/back view)
+- Muscles highlight automatically based on logged workouts
+- Hover over a muscle to see days since last trained
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Progress & Streaks
+- Daily streak counter
+- Activity heatmap calendar (last 30 days)
 
-## Expanding the ESLint configuration
+### Other
+- Light/dark mode
+- All data persisted in localStorage (workouts, streak, favorites)
+- Fully client-side, no backend
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Tech Stack
+- React + Vite
+- Tailwind CSS
+- react-body-highlighter
+- localStorage
+
+## Hosting
+Deployed on GitHub Pages: [link here]
