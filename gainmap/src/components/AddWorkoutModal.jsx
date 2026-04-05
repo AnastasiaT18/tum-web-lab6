@@ -94,7 +94,7 @@ function AddWorkoutModal({isOpen, onClose, onSave}){
                             <div key={ex.id} className="flex flex-col gap-1 rounded-lg">
                                 <div  
                                 className="flex items-center gap-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg cursor-pointer px-2 py-1 transition-colors"
-                                onClick={()=>toggleExercise(ex)}
+                                
                                 >
                                     <input type="checkbox" name={ex.name} 
                                     checked={isSelected} 

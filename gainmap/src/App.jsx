@@ -36,7 +36,7 @@ function App() {
 
         {/* left side-body map */} 
         <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6">
-          <BodyMap workouts={[]} />
+          <BodyMap workouts={workouts} />
         </div>
 
         {/* right side - stats*/}
@@ -65,6 +65,11 @@ function App() {
         onClose={() => setIsModalOpen(false)}
         onSave={addWorkout}
       />
+
+      <button onClick={()=>{
+        localStorage.clear(); 
+        setWorkouts([])}}> 
+        Clear local storage</button>
 
     </div>
   )
