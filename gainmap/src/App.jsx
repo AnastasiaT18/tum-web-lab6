@@ -4,6 +4,7 @@ import BodyMap from "./components/BodyMap"
 import AddWorkoutModal from "./components/AddWorkoutModal"
 import RecentWorkouts from "./components/RecentWorkouts"
 import { Toaster } from "react-hot-toast";
+import ActivityCalendar from "./components/ActivityCalendar";
 
 
 function App() {
@@ -60,7 +61,7 @@ function App() {
             <p className="text-stone-400 dark:text-stone-500">Streak coming soon...</p>
           </div>
           <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6">
-            <p className="text-stone-400 dark:text-stone-500">Activity calendar coming soon...</p>
+            <ActivityCalendar workouts={workouts} />
           </div>
           <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6">
             <RecentWorkouts workouts={workouts} onDelete={deleteWorkout} toggleLike={toggleLike} />
