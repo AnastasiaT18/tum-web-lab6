@@ -14,18 +14,18 @@ Log your workouts, visualize which muscles you've trained, and track your consis
 
 ### Body Map
 - Interactive SVG human body (front/back view)
-- Muscles highlight automatically based on logged workouts
+- Muscles highlight automatically based on logged workouts + INTENSITY WORKED??
 - Hover over a muscle to see days since last trained
 
 ### Progress & Streaks
-- Daily streak counter
+- Daily streak counter + REST DAYS (FREEZE OR NOT COUNT)
 - Activity heatmap calendar (last 30 days)
 
 ### Other
 - Light/dark mode
 - All data persisted in localStorage (workouts, streak, favorites)
 - Fully client-side, no backend
-
+- RESPONSIVE
 ## Tech Stack
 - React + Vite
 - Tailwind CSS

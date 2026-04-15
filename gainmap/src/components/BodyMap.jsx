@@ -3,28 +3,45 @@ import { useState } from 'react';
 
 function BodyMap({ workouts = [] }) {
     const [side, setSide] = useState("front")
-    const [selectedPart, setSelectedPart] = useState(null);
-    const [workoutData, setWorkoutData] = useState({});
 
+    const muscleMap = musclesToHighlight(workouts)
 
-    // transform workoutData → array format for <Body>
-    const bodyData = Object.entries(workoutData).map(([slug, intensity]) => ({
+    const bodyData = Object.entries(muscleMap).map(([slug, intensity]) => ({
         slug,
-        intensity: Math.min(intensity, 3)
+        intensity
     }))
 
+    console.log(bodyData)
 
-    const handlePartClick = (part) => {
-        setSelectedPart(part)
-        if(part.slug){
-            setWorkoutData((prev)=>({
-                ...prev,
-                [part.slug]: (prev[part.slug] || 0) + 1
-            }));
+    function musclesToHighlight(workouts){
+        console.log(workouts)
+        const sorted = [...workouts].sort((a,b) => new Date(b.date) - new Date(a.date));
+        const muscleMap = {};
+
+        for(let workout of sorted){
+            for(let exercise of workout.exercises){
+                for(let muscle of exercise.muscles){
+                    const intensity = getIntensity(new Date(workout.date))
+                    muscleMap[muscle] = Math.max(muscleMap[muscle] || 0, intensity)
+
+                }
+            }
         }
-        };
-        console.log("current workoutData:", workoutData)
+        
+        return muscleMap
 
+    }
+
+    function getIntensity(workoutDate){
+        const today = new Date()
+        const diffMs = today - workoutDate // difference in milliseconds
+        const daysDiff = diffMs / (1000 * 60 * 60 * 24) // convert to days
+
+        if (daysDiff <=1) return 3
+        else if(daysDiff <=3) return 2
+        else if(daysDiff <=7) return 1
+        else if (daysDiff > 7) return 0
+    }
 
     return (
         <div className="flex flex-col items-center gap-4">
@@ -56,7 +73,6 @@ function BodyMap({ workouts = [] }) {
           gender="female"
           colors={["#ffd700", "#ffa500", " #ff6b6b"]}
           scale={1.5}
-          onBodyPartPress={handlePartClick}
         />
 
         </div>
