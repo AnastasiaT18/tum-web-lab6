@@ -2,6 +2,9 @@ import {useState, useEffect } from "react"
 import Navbar from "./components/Navbar"
 import BodyMap from "./components/BodyMap"
 import AddWorkoutModal from "./components/AddWorkoutModal"
+import RecentWorkouts from "./components/RecentWorkouts"
+import { Toaster } from "react-hot-toast";
+
 
 function App() {
 
@@ -26,10 +29,22 @@ function App() {
   const addWorkout = (workout) => {
     setWorkouts(prev => [...prev, workout]);
     console.log(workouts);
+  }
 
+  const deleteWorkout = (id) => {
+    setWorkouts(prev=> prev.filter(w=> w.id !== id));
+  }
+
+  const toggleLike = (id) => {
+    setWorkouts(prev => prev.map(w =>
+      w.id === id ? {...w, liked: !w.liked} : w
+    )
+  );
   }
 
   return (
+    <>
+    <Toaster/>
     <div className="font-sans min-h-screen bg-stone-50 dark:bg-stone-900 transition-colors duration-300">
       <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
       <main className="max-w-full mx-auto px-6  grid lg:grid-cols-2 gap-6">
@@ -48,7 +63,7 @@ function App() {
             <p className="text-stone-400 dark:text-stone-500">Activity calendar coming soon...</p>
           </div>
           <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6">
-            <p className="text-stone-400 dark:text-stone-500">Recent workouts coming soon...</p>
+            <RecentWorkouts workouts={workouts} onDelete={deleteWorkout} toggleLike={toggleLike} />
           </div>
 
           <button onClick={() => setIsModalOpen(true)}
@@ -72,6 +87,7 @@ function App() {
         Clear local storage</button>
 
     </div>
+    </>
   )
 }
 
