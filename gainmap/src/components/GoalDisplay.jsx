@@ -7,8 +7,7 @@ import { SiTicktick } from "react-icons/si";
 
 
 
-
-function GoalDisplay({weeklyGoal = 0, workouts= []}) {
+function GoalDisplay({weeklyGoal = 0, workouts= [], onOpenSettings}) {
 
     function getCompletedDays(){
         let completedDays = 0;
@@ -28,13 +27,18 @@ function GoalDisplay({weeklyGoal = 0, workouts= []}) {
     }
 
     const completedDays = getCompletedDays() ;
-    const progress = weeklyGoal === 0 ? 0 : getCompletedDays() / weeklyGoal;
+    const progress = weeklyGoal === 0 ? 0 : completedDays / weeklyGoal;
 
     return (
         <div>
             <div className="flex items-center justify-between mb-4 ">
                 <h2 className="text-lg text-stone-800 dark:text-stone-200 ">Weekly Goal</h2>
-                <IoSettingsOutline className="dark:text-white" />
+                <button
+                    onClick={onOpenSettings}
+                    className="p-2 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+                    >
+                    <IoSettingsOutline className="w-4 h-4 text-stone-800 dark:text-white" />
+                    </button>
             </div>
             <div>
                 <div>
@@ -46,9 +50,9 @@ function GoalDisplay({weeklyGoal = 0, workouts= []}) {
                             style={{ width: `${progress * 100}%` }} />
                     </div>
                     <p className="text-sm mt-2">
-                        {(weeklyGoal - completedDays) === 0
+                        {(weeklyGoal - completedDays) <= 0
                         ? (<span className = "text-green-500 flex gap-1"><SiTicktick className="mt-1" />Goal reached! Great Work!</span>)
-                        :(<span>{weeklyGoal-completedDays} to reach your goal</span>)
+                        :(<span className="dark:text-stone-200">{weeklyGoal-completedDays} to reach your goal</span>)
                         }</p>
                 </div>
             </div>
