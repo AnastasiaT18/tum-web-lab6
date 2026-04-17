@@ -16,7 +16,7 @@ function ActivityCalendar ({workouts = []}) {
         const daysInMonth = today.daysInMonth();
 
         const firstDay = dayjs(new Date(year, month, 1));
-        const weekdayIndex = firstDay.day(); //sunday 0, monday 1, ... saturday 6
+        let weekdayIndex = firstDay.day(); //sunday 0, monday 1, ... saturday 6
 
         for (let i=0; i<(weekdayIndex+6)%7; i++){
             data.push(null);
@@ -28,6 +28,12 @@ function ActivityCalendar ({workouts = []}) {
             data.push({ date, workoutDone });
         }
 
+        const lastDay = firstDay.endOf('month'); 
+        weekdayIndex = lastDay.day(); 
+
+        for (let i=weekdayIndex; i<=6; i++){
+            data.push(null);
+            }
 
         for(let i=0;i < data.length; i+=7){
             weeks.push(data.slice(i, i+7));
@@ -42,18 +48,18 @@ function ActivityCalendar ({workouts = []}) {
 
 
   return (
-    <div>
-        <h2 className="text-lg text-stone-800 dark:text-stone-200 mb-4">
-            Activity Calendar
+    <div className="flex flex-col  ">
+        <h2 className="text-lg text-stone-800 dark:text-stone-200 mb-4 ">
+            Activity
         </h2>
-            <div className="gap-1 mb-1 flex flex-row">  
+            <div className="gap-1 mb-1 flex flex-row items-center justify-center">  
                 {days.map((day, index) => (
-                    <span key={index} className="text-xs text-stone-500 dark:text-stone-400 w-4 h-4 inline-flex items-center justify-center">
+                    <span key={index} className="text-xs  text-stone-500 dark:text-stone-400 w-6 h-6 inline-flex items-center justify-center">
                         {day}
                     </span>
                 ))}
             </div>
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 items-center">
                 {activityData.map((week, weekIndex) => (
                     <div key={weekIndex} className="flex gap-1">
                         {week.map((day, dayIndex) =>(
@@ -63,13 +69,14 @@ function ActivityCalendar ({workouts = []}) {
                                   ? `${dayjs(day.date).format("DD/MM/YYYY")}: ${day.workoutDone ? "Workout done" : "No workout"}`
                                   : ""
                               }
-                            className={`w-4 h-4 rounded transition-all duration-150 justify-center ${
+                            className={`w-6 h-6 flex text-xs rounded-full transition-all duration-150 justify-center items-center ${
                                 day
                                 ? day.workoutDone
                                     ? "bg-green-500"
                                     : "bg-gray-300 dark:bg-gray-600"
                                 : "bg-transparent"
                             }  ${day && dayjs(day.date).isSame(dayjs(), 'day')? "ring-2 ring-brand" : ""} hover:scale-110`}>
+                                {day ? dayjs(day.date).date() : ""}
                             </div>
                         ) )}
                     </div>
