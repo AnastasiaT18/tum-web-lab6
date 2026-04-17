@@ -5,12 +5,17 @@ import AddWorkoutModal from "./components/AddWorkoutModal"
 import RecentWorkouts from "./components/RecentWorkouts"
 import { Toaster } from "react-hot-toast";
 import ActivityCalendar from "./components/ActivityCalendar";
+import GoalDisplay from "./components/GoalDisplay"
+import GoalSettingsModal from "./components/GoalSettingsModal";
+
 
 
 function App() {
 
   const [darkMode, setDarkMode] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+
 
   const [workouts, setWorkouts] = useState(()=>{
     const saved = localStorage.getItem("workouts");
@@ -18,9 +23,19 @@ function App() {
     return parsed || [];
   })
 
+  const [weeklyGoal, setWeeklyGoal] = useState(()=>{
+    const saved = localStorage.getItem("weeklyGoal");
+    const parsed = JSON.parse(saved);
+    return parsed || 3;
+  })
+
   useEffect(() => {
     localStorage.setItem("workouts", JSON.stringify(workouts));
   }, [workouts])
+
+  useEffect (() => {
+    localStorage.setItem("weeklyGoal", JSON.stringify(weeklyGoal));
+  }, [weeklyGoal])
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode)
@@ -43,6 +58,11 @@ function App() {
   );
   }
 
+  const updateWeeklyGoal = (newGoal) => {
+    setWeeklyGoal(newGoal);
+    console.log("Updated weekly goal:", newGoal);
+  }
+
   return (
     <>
     <Toaster/>
@@ -57,11 +77,13 @@ function App() {
 
         {/* right side - stats*/}
         <div className="flex flex-col gap-4">
-          <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6">
-            <p className="text-stone-400 dark:text-stone-500">Streak coming soon...</p>
-          </div>
-          <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6">
-            <ActivityCalendar workouts={workouts} />
+          <div className="flex flex-row gap-4">
+            <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6 flex-1">
+              <GoalDisplay weeklyGoal={weeklyGoal} workouts={workouts} onOpenSettings={()=>setIsGoalModalOpen(true)}/>
+            </div>
+            <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6 flex-1">
+              <ActivityCalendar workouts={workouts} />
+            </div>
           </div>
           <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6">
             <RecentWorkouts workouts={workouts} onDelete={deleteWorkout} toggleLike={toggleLike} />
@@ -86,6 +108,13 @@ function App() {
         localStorage.clear(); 
         setWorkouts([])}}> 
         Clear local storage</button>
+
+      <GoalSettingsModal 
+        isModalOpen={isGoalModalOpen} 
+        onClose={()=>setIsGoalModalOpen(false)} 
+        onSave={updateWeeklyGoal} 
+        weeklyGoal={weeklyGoal}
+      />
 
     </div>
     </>
