@@ -6,7 +6,7 @@ import {useState} from "react";
 import { useRef } from "react";
 
 
-function RecentWorkouts({ workouts = [], onDelete, toggleLike }){
+function RecentWorkouts({ workouts = [], onDelete, toggleLike, onSelectingWorkout }){
     const sortedWorkouts = [...workouts].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0,5);
 
     const [visibleCount, setVisibleCount] = useState(2);
@@ -41,19 +41,20 @@ function RecentWorkouts({ workouts = [], onDelete, toggleLike }){
 
             {visibleWorkouts.map((workout,index) =>(
                         <div key={workout.id} ref={index === visibleWorkouts.length - 1 ? lastItemRef : null}
-                        className=" p-4 rounded-lg hover:bg-stone-100 hover:border-stone-300 dark:hover:bg-stone-700 dark:hover:border-stone-600 transition-colors">
+                        onClick={()=>onSelectingWorkout(workout)}
+                        className=" p-4 rounded-lg hover:bg-stone-100 hover:border-stone-300 dark:hover:bg-stone-700 dark:hover:border-stone-600 transition-colors cursor-pointer">
                            <div className="flex">
                                 <p className="text-sm text-stone-500 dark:text-stone-400 mb-2">{new Date(workout.date).toLocaleDateString()}</p>
                                 <div className="ml-auto flex gap-2">
                                     <button className="rounded-lg hover:bg-stone-200 dark:hover:bg-stone-600 p-2 transition-colors"
-                                        onClick = {()=> handleLike(workout)}>
+                                        onClick = {(e)=>{e.stopPropagation(); handleLike(workout)}}>
                                         {workout.liked ? (
                                             <FaHeart className="text-red-500"/> ): (
                                             <FiHeart className="text-stone-500"/>
                                         )}
                                     </button>
                                     <button className="p-2 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-600 transition"
-                                        onClick = {()=> handleDelete(workout.id)}>
+                                        onClick = {(e)=> {e.stopPropagation(); handleDelete(workout.id)}}>
                                         <FiTrash2 className="text-stone-500 hover:text-red-500" />
                                     </button>
                                 </div>

@@ -7,6 +7,8 @@ import { Toaster } from "react-hot-toast";
 import ActivityCalendar from "./components/ActivityCalendar";
 import GoalDisplay from "./components/GoalDisplay"
 import GoalSettingsModal from "./components/GoalSettingsModal";
+import WorkoutModal from "./components/WorkoutModal"
+
 
 
 
@@ -15,6 +17,9 @@ function App() {
   const [darkMode, setDarkMode] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+
+  const [selectedWorkout, setSelectedWorkout] = useState(null);
+  const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false);
 
 
   const [workouts, setWorkouts] = useState(()=>{
@@ -86,7 +91,8 @@ function App() {
             </div>
           </div>
           <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6">
-            <RecentWorkouts workouts={workouts} onDelete={deleteWorkout} toggleLike={toggleLike} />
+            <RecentWorkouts workouts={workouts} onDelete={deleteWorkout} toggleLike={toggleLike} 
+              onSelectingWorkout={(workout)=>{setSelectedWorkout(workout); setIsWorkoutModalOpen(true)}}/>
           </div>
 
           <button onClick={() => setIsModalOpen(true)}
@@ -114,6 +120,12 @@ function App() {
         onClose={()=>setIsGoalModalOpen(false)} 
         onSave={updateWeeklyGoal} 
         weeklyGoal={weeklyGoal}
+      />
+
+      <WorkoutModal 
+      workout = {selectedWorkout}
+      isOpen = {isWorkoutModalOpen}
+      onClose = {()=> setIsWorkoutModalOpen(false)}
       />
 
     </div>
