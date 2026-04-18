@@ -76,8 +76,30 @@ function App() {
       <main className="max-w-full mx-auto px-6  grid lg:grid-cols-2 gap-6">
 
         {/* left side-body map */} 
-        <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6">
+        <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6 flex flex-col">
           <BodyMap workouts={workouts} />
+            <div className="mt-4 mb-4 flex flex-wrap flex-row gap-4 text-xs text-stone-500 dark:text-stone-300 justify-center">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-stone-300 dark:bg-stone-600" />
+                  <span> No recent activity ( &gt; 7 days )</span>
+                </div>
+
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-yellow-400" />
+                    <span>Moderate inactivity ( 3 – 7 days )</span>
+                </div>
+
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-orange-400" />
+                    <span>Recent activity ( 1 – 3 days )</span>
+                </div>
+
+              <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded bg-red-500" />
+                      <span>Very recent activity ( &le; 1 day )</span>
+                  </div>
+
+              </div>
         </div>
 
         {/* right side - stats*/}
