@@ -14,7 +14,6 @@ function BodyMap({ workouts = [] }) {
     console.log(bodyData)
 
     function musclesToHighlight(workouts){
-        console.log(workouts)
         const sorted = [...workouts].sort((a,b) => new Date(b.date) - new Date(a.date));
         const muscleMap = {};
 
