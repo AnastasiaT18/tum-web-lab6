@@ -1,5 +1,7 @@
 import Body from "react-muscle-highlighter"
 import { useState, useEffect } from 'react';
+import dayjs from 'dayjs';
+
 
 function BodyMap({ workouts = [] }) {
     const [side, setSide] = useState("front")
@@ -47,6 +49,19 @@ function BodyMap({ workouts = [] }) {
 
     function handleMuscleClick(part){
         setSelectedPart(part.slug);
+    }
+
+    function getLastRecentWorkoutForMuscle(muscle){
+        const sorted = [...workouts].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+        for(let workout of sorted){
+            for(let exercise of workout.exercises){
+                if(exercise.muscles.includes(muscle)){
+                    return workout.date;
+                }
+            }
+        }
+
     }
 
     useEffect(() => {
@@ -100,12 +115,23 @@ function BodyMap({ workouts = [] }) {
                     />
 
                     {selectedPart && (
-                                <div className=" absolute mt-2 p-4 bg-stone-50 dark:bg-stone-700 rounded-xl border border-stone-200 dark:border-stone-600 pointer-events-none"
+                                <div 
+                                className="absolute z-10 px-3 py-2 bg-stone-800/95 dark:bg-stone-900 text-white rounded-sm pointer-events-none w-44"
                                 style={{
                                     left: tooltipPos.x+10,
                                     top: tooltipPos.y + 10
                                 }}>
-                                    <h3>{selectedPart}</h3>
+                                    <h3
+                                        className="font-medium capitalize mb-1"
+                                    >{selectedPart}</h3>
+                                    {(dayjs().diff(dayjs(getLastRecentWorkoutForMuscle(selectedPart)), "day") > 7)
+                                    ||(!getLastRecentWorkoutForMuscle(selectedPart) ) ? (
+                                        <p className="text-sm"> No recent activity</p>
+                                    )
+                                    : (
+                                        <p className="text-sm"> Last worked out: {dayjs(getLastRecentWorkoutForMuscle(selectedPart)).format("DD/MM/YYYY")}</p>
+                                    )
+                                }
                                 </div>
 
                             )}
