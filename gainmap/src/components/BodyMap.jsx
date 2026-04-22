@@ -1,8 +1,13 @@
 import Body from "react-muscle-highlighter"
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import dayjs from 'dayjs';
+
 
 function BodyMap({ workouts = [] }) {
     const [side, setSide] = useState("front")
+    const [selectedPart, setSelectedPart] = useState(null)
+    const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
+
 
     const muscleMap = musclesToHighlight(workouts)
 
@@ -42,39 +47,98 @@ function BodyMap({ workouts = [] }) {
         else if (daysDiff > 7) return 0
     }
 
+    function handleMuscleClick(part){
+        setSelectedPart(part.slug);
+    }
+
+    function getLastRecentWorkoutForMuscle(muscle){
+        const sorted = [...workouts].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+        for(let workout of sorted){
+            for(let exercise of workout.exercises){
+                if(exercise.muscles.includes(muscle)){
+                    return workout.date;
+                }
+            }
+        }
+
+    }
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+          if (!e.target.closest('.body-map-container')) {
+            setSelectedPart(null)
+          }
+        }
+        document.addEventListener('click', handleClickOutside)
+        return () => document.removeEventListener('click', handleClickOutside)
+      }, [])
+
     return (
+        <>
         <div className="flex flex-col items-center gap-4">
 
-        {/* Front/Back Toggle*/}
-        <div className="flex gap-4">
-            <button onClick={() => setSide("front")}
-                className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors
-                    ${side === "front"
-                      ? "bg-brand text-white border-brand"
-                      : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
-                    >
-                Front
-            </button>
+            {/* Front/Back Toggle*/}
+            <div className="flex gap-4">
+                <button onClick={() => setSide("front")}
+                    className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors
+                        ${side === "front"
+                        ? "bg-brand text-white border-brand"
+                        : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
+                        >
+                    Front
+                </button>
 
-            <button onClick={() => setSide("back")}
-                className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors
-                    ${side === "back"
-                      ? "bg-brand text-white border-brand"
-                      : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
-                    >
-                Back
-            </button>
+                <button onClick={() => setSide("back")}
+                    className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors
+                        ${side === "back"
+                        ? "bg-brand text-white border-brand"
+                        : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
+                        >
+                    Back
+                </button>
+            </div>
+
+            <div className = "relative body-map-container"
+                onMouseMove = {(e)=> {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                }}
+            >
+                    <Body
+                    data={bodyData}          
+                    side={side}
+                    gender="female"
+                    colors={["#ffd700", "#ffa500", " #ff6b6b"]}
+                    scale={1.5}
+                    onBodyPartPress={handleMuscleClick}
+                    />
+
+                    {selectedPart && (
+                                <div 
+                                className="absolute z-10 px-3 py-2 bg-stone-800/95 dark:bg-stone-900 text-white rounded-sm pointer-events-none w-44"
+                                style={{
+                                    left: tooltipPos.x+10,
+                                    top: tooltipPos.y + 10
+                                }}>
+                                    <h3
+                                        className="font-medium capitalize mb-1"
+                                    >{selectedPart}</h3>
+                                    {(dayjs().diff(dayjs(getLastRecentWorkoutForMuscle(selectedPart)), "day") > 7)
+                                    ||(!getLastRecentWorkoutForMuscle(selectedPart) ) ? (
+                                        <p className="text-sm"> No recent activity</p>
+                                    )
+                                    : (
+                                        <p className="text-sm"> Last worked out: {dayjs(getLastRecentWorkoutForMuscle(selectedPart)).format("DD/MM/YYYY")}</p>
+                                    )
+                                }
+                                </div>
+
+                            )}
+            </div>
+
         </div>
-
-        <Body
-          data={bodyData}          
-          side={side}
-          gender="female"
-          colors={["#ffd700", "#ffa500", " #ff6b6b"]}
-          scale={1.5}
-        />
-
-        </div>
+        </>
 
   );
 }
