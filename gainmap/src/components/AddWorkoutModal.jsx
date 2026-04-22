@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { exercises as availableExercises } from "../data/exercises";
+// import AddCustomExercise from "./AddCustomExercise";
 
-function AddWorkoutModal({isOpen, onClose, onSave}){
+function AddWorkoutModal({isOpen, onClose, onSave, onSaveCustomExercise, customExercises}) {
     const [date, setDate] = useState(
         new Date().toISOString().slice(0,16) // format for datetime-local input
     );
 
     const [exercises, setExercises] = useState([]);
-
     const [targetExercise, setTargetExercise] = useState("");
+
+    const [showCustomForm, setShowCustomForm] = useState(null);
+    const [customExerciseName, setCustomExerciseName] = useState("");
+    const [customExerciseMuscles, setCustomExerciseMuscles] = useState([]);
+
 
     const toggleExercise = (ex) => {
         const isSelected = exercises.some(e => e.exerciseId === ex.id);
@@ -50,13 +55,56 @@ function AddWorkoutModal({isOpen, onClose, onSave}){
         onClose();
     }
 
+    const getAllMuscles = () => {
+        const muscleSet = new Set();
+        availableExercises.forEach(ex => ex.muscles.forEach(m => muscleSet.add(m)));
+        return Array.from(muscleSet);
+    }
+
+    const allMuscles = getAllMuscles();
+
+    const toggleMuscle = (muscle) =>{
+        const muscleIsSelected = customExerciseMuscles.includes(muscle);
+
+        if(muscleIsSelected){
+            setCustomExerciseMuscles(prev => prev.filter(m => m !== muscle));
+        }
+        else{
+            setCustomExerciseMuscles(prev => [...prev, muscle]);
+        }
+    }
+
+    const handleSaveCustomExercise = () => {
+        if(!customExerciseName.trim()){
+            alert("Please enter an exercise name.");
+            return;
+        }
+        if(customExerciseMuscles.length === 0){
+            alert("Please select at least one muscle.");
+            return;
+        }
+
+        const newCustomExercise = {
+            id: "custom-" + customExerciseName.toLowerCase() + Date.now(),
+            name: customExerciseName,
+            muscles: customExerciseMuscles
+        }
+
+        onSaveCustomExercise(newCustomExercise);
+        setCustomExerciseName("");
+        setCustomExerciseMuscles([]);
+        setShowCustomForm(false);
+    }
+
+    const allExercises = [...availableExercises, ...customExercises];
+
+
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div className="bg-white dark:bg-stone-800 rounded-2xl w-full max-w-lg p-6">
-                
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 ">
+            <div className="bg-white dark:bg-stone-800 rounded-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden">
                 <div className="flex items-center justify-between mb-4 px-6 py-4 border-b border-stone-100 dark:border-stone-700">
                     <h1 className="text-lg font-medium text-stone-800 dark:text-stone-100 ">Add Workout</h1>
                     <button onClick={onClose}
@@ -64,6 +112,7 @@ function AddWorkoutModal({isOpen, onClose, onSave}){
                     >✕</button>
                 </div>
 
+                <div className="flex-1 overflow-y-auto px-6 py-4">
                 {/*Select date and time */}
                 <div className="flex flex-col gap-1.5 mb-4">
                     <label className = "text-sm text-stone-500 dark:text-stone-400">Date & Time</label>
@@ -71,6 +120,67 @@ function AddWorkoutModal({isOpen, onClose, onSave}){
                     className="w-full border border-stone-200 dark:border-stone-600 rounded-lg px-3 py-2 bg-stone-50 dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-colors"
                     ></input>
                 </div>
+
+                <div className="flex gap-3 mb-4">
+                    <button className="border border-stone-200 dark:border-stone-600 rounded-lg px-3 py-2 bg-stone-50 dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-colors placeholder:text-stone-400">
+                        Templates
+                    </button>
+                    <button className="border border-stone-200 dark:border-stone-600 rounded-lg px-3 py-2 bg-stone-50 dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-colors placeholder:text-stone-400"
+                        onClick={()=>setShowCustomForm(prev=>!prev)}>
+                        Custom Workout
+                    </button>
+                </div>
+
+                {showCustomForm && (
+                    <div className="w-full border bg-stone-50 dark:bg-stone-700 border-stone-200 dark:border-stone-600 rounded-lg px-3 py-2 mb-4">
+                        <div>
+                            <label className = "text-sm text-stone-500 dark:text-stone-400">Exercise Name</label>
+                            <input type="text" placeholder="e.g., Handstand, Pilates ..." onChange={(e)=>setCustomExerciseName(e.target.value)} value={customExerciseName}
+                            className="w-full border border-stone-200 dark:border-stone-600 rounded-lg px-3 py-2 bg-stone-50 dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-colors placeholder:text-stone-400"
+                            ></input>
+                        </div>
+                        <div>
+                            <label className = "text-sm text-stone-500 dark:text-stone-400">Muscles</label>
+                            <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
+                            {allMuscles.map(muscle => {
+                                const muscleIsSelected = !!customExerciseMuscles.find(m => m === muscle)
+                                
+                                return (
+                                    <div key={muscle} className="flex items-center gap-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg cursor-pointer px-2 py-1 transition-colors">
+                                        <button
+                                            key={muscle}
+                                            type="button"
+                                            onClick={() => toggleMuscle(muscle)}
+                                            className={`
+                                                px-3 py-1.5 rounded-full text-xs font-medium border transition-all
+                                                ${muscleIsSelected
+                                                ? "bg-brand text-white border-brand scale-105"
+                                                : "bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 border-stone-300 dark:border-stone-600 hover:bg-stone-200 dark:hover:bg-stone-600"}
+                                            `}
+                                            >
+                                            {muscle}
+                                            </button>
+                                    </div>
+                                )
+
+                            }
+                                
+                            )}
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={handleSaveCustomExercise}
+                            className="mt-3 px-3 py-2 bg-brand text-white text-sm rounded-lg hover:opacity-90 transition"
+                            >
+                            Save Custom Exercise
+                            </button>
+
+
+                    </div>
+                )}
+
+                
             
                 {/*Select exercises */}
                 <div className="flex flex-col gap-1.5 mb-4">
@@ -84,7 +194,7 @@ function AddWorkoutModal({isOpen, onClose, onSave}){
                 <div className="flex flex-col gap-1.5">
                     <label className = "text-sm text-stone-500 dark:text-stone-400">Available Exercises</label>
                     <div className="flex flex-col gap-2 max-h-48 overflow-y-auto px-3 py-2 border border-stone-200 dark:border-stone-600 rounded-lg  dark:text-stone-100">
-                        {availableExercises
+                        {allExercises
                             .filter(ex => ex.name.toLowerCase().includes(targetExercise.toLowerCase()))
                             .map(ex => {
                                 const selected = exercises.find(e => e.exerciseId === ex.id)
@@ -128,6 +238,7 @@ function AddWorkoutModal({isOpen, onClose, onSave}){
                     </div>
                 </div>
 
+                </div>
                 {/* Footer */}
                 <div className="flex items-center justify-end gap-4 mt-6">
                     <button
