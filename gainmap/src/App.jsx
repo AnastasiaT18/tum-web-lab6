@@ -20,6 +20,7 @@ function App() {
 
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false);
+  const [gender, setGender] = useState("female")
 
 
   const [workouts, setWorkouts] = useState(()=>{
@@ -68,6 +69,10 @@ function App() {
     console.log("Updated weekly goal:", newGoal);
   }
 
+  const handleGenderChange = (gender) => {
+    setGender(gender);
+  }
+
   return (
     <>
     <Toaster/>
@@ -77,7 +82,7 @@ function App() {
 
         {/* left side-body map */} 
         <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6 flex flex-col">
-          <BodyMap workouts={workouts} />
+          <BodyMap workouts={workouts} gender = {gender} handleGenderChange={handleGenderChange} />
             <div className="mt-4 mb-4 flex flex-wrap flex-row gap-4 text-xs text-stone-500 dark:text-stone-300 justify-center">
               <div className="flex items-center gap-1">
                 <div className="w-3 h-3 rounded bg-stone-300 dark:bg-stone-600" />
@@ -147,6 +152,8 @@ function App() {
       <WorkoutModal 
       workout = {selectedWorkout}
       isOpen = {isWorkoutModalOpen}
+      gender = {gender}
+      handleGenderChange={handleGenderChange}
       onClose = {()=> setIsWorkoutModalOpen(false)}
       />
 

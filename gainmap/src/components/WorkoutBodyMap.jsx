@@ -1,7 +1,7 @@
 import Body from "react-muscle-highlighter"
 import { useState } from 'react';
 
-function WorkoutBodyMap({ side, workout }) {
+function WorkoutBodyMap({ side, workout, gender }) {
     const muscleMap = musclesToHighlight(workout)
 
     const bodyData = Object.entries(muscleMap).map(([slug, intensity]) => ({
@@ -47,7 +47,7 @@ function WorkoutBodyMap({ side, workout }) {
         <Body
           data={bodyData}          
           side={side}
-          gender="female"
+          gender={gender}
           colors={["#ffd700", "#ffa500", " #ff6b6b"]}
           scale={1}
         />

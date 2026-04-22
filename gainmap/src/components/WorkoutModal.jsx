@@ -5,7 +5,7 @@ import { CiClock1 } from "react-icons/ci";
 import {useState} from "react"
 
 
-function WorkoutModal ({workout, isOpen, onClose}) {
+function WorkoutModal ({workout, isOpen, onClose, gender, handleGenderChange}) {
 
     const [side, setSide] = useState("front")
 
@@ -68,36 +68,60 @@ function WorkoutModal ({workout, isOpen, onClose}) {
                     {/* RIGHT - BODY MAP */}
                     <div className="w-full md:w-1/2 px-6 py-2 border-l border-stone-200 dark:border-stone-700 flex flex-col">
                         
-                        <div className="flex items-center justify-between mb-4">
+                        <div className="flex  justify-between mb-4">
                             <h3 className="text-stone-900 dark:text-white mb-4 pt-4">
                                 Muscles Worked
                             </h3>
 
-                            {/* Front/Back Toggle*/}
-                            <div className="flex ">
-                                <button onClick={() => setSide("front")}
-                                    className={`px-3 rounded-l-lg text-sm font-medium border transition-colors
-                                        ${side === "front"
-                                        ? "bg-brand text-white border-brand"
-                                        : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
-                                        >
-                                    Front
-                                </button>
+                            <div className="flex flex-col items-center gap-2 mt-3">
+                                <div className="flex ">
+                                    <button onClick={()=>handleGenderChange("female")}
+                                        className={`px-3 rounded-l-lg text-sm font-medium border transition-colors
+                                            ${gender === "female"
+                                            ? "bg-brand text-white border-brand"
+                                            : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
+                                            >
+                                            Female
+                                    </button>
 
-                                <button onClick={() => setSide("back")}
-                                    className={`px-4 py-1.5 rounded-r-lg text-sm font-medium border transition-colors
-                                        ${side === "back"
-                                        ? "bg-brand text-white border-brand"
-                                        : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
-                                        >
-                                    Back
-                                </button>
+                                    <button onClick={()=>handleGenderChange("male")}
+                                        className={`px-3 py-1.5 rounded-r-lg text-sm font-medium border transition-colors
+                                            ${gender === "male"
+                                            ? "bg-brand text-white border-brand"
+                                            : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
+                                            >
+                                            Male
+                                    </button>
+                                </div>
+
+                                {/* Front/Back Toggle*/}
+                                <div className="flex ">
+                                    <button onClick={() => setSide("front")}
+                                        className={`px-3 rounded-l-lg text-sm font-medium border transition-colors
+                                            ${side === "front"
+                                            ? "bg-brand text-white border-brand"
+                                            : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
+                                            >
+                                        Front
+                                    </button>
+
+                                    <button onClick={() => setSide("back")}
+                                        className={`px-3 py-1.5 rounded-r-lg text-sm font-medium border transition-colors
+                                            ${side === "back"
+                                            ? "bg-brand text-white border-brand"
+                                            : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
+                                            >
+                                        Back
+                                    </button>
+                                </div>
                             </div>
+
+
 
                         </div>
 
                         <div className="flex justify-center flex-col">
-                            <WorkoutBodyMap side={side} workout={workout} />
+                            <WorkoutBodyMap side={side} workout={workout} gender={gender} />
                             <div className="mt-4 mb-4 flex flex-wrap flex-row gap-4 text-xs text-stone-500 dark:text-stone-300 justify-center">
   
                                 <div className="flex items-center gap-1">
