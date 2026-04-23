@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { exercises as availableExercises } from "../data/exercises";
 import CustomExerciseForm from "./CustomExerciseForm";
+import dayjs from "dayjs";
 
-function AddWorkoutModal({isOpen, onClose, onSave, onSaveCustomExercise, customExercises}) {
+function AddWorkoutModal({isOpen, onClose, onSave, onSaveCustomExercise, customExercises, workouts}) {
     const [date, setDate] = useState(
         new Date().toISOString().slice(0,16) // format for datetime-local input
     );
 
     const [exercises, setExercises] = useState([]);
     const [targetExercise, setTargetExercise] = useState("");
-
     const [showCustomForm, setShowCustomForm] = useState(null);
+    const [showTemplates, setShowTemplates] = useState(false);
     
     const toggleExercise = (ex) => {
         const isSelected = exercises.some(e => e.exerciseId === ex.id);
@@ -52,9 +53,25 @@ function AddWorkoutModal({isOpen, onClose, onSave, onSaveCustomExercise, customE
         onClose();
     }
 
+    const handleUseTemplate = (workout) => {
+        const clonedExercises = workout.exercises.map(ex => ({
+            exerciseId: ex.exerciseId,
+            exerciseName: ex.exerciseName,
+            muscles: ex.muscles,
+            sets: ex.sets,
+            reps: ex.reps
+        }));
+    
+        setExercises(clonedExercises);
+    }
     
 
     const allExercises = [...availableExercises, ...customExercises];
+
+    const sortedWorkouts = [...workouts].sort((a,b)=> new Date(b.date) - new Date(a.date));
+    const recentWorkouts = sortedWorkouts.slice(0,3);
+    console.log(recentWorkouts);
+
 
 
 
@@ -80,17 +97,58 @@ function AddWorkoutModal({isOpen, onClose, onSave, onSaveCustomExercise, customE
                 </div>
 
                 <div className="flex gap-3 mb-4">
-                    <button className="border border-stone-200 dark:border-stone-600 rounded-lg px-3 py-2 bg-stone-50 dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-colors placeholder:text-stone-400">
+                    <button className="border border-stone-200 dark:border-stone-600 rounded-lg px-3 py-2 bg-stone-50 dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-colors placeholder:text-stone-400"
+                        onClick={()=>{setShowTemplates(prev=>!prev); setShowCustomForm(false)}}>
                         Templates
                     </button>
                     <button className="border border-stone-200 dark:border-stone-600 rounded-lg px-3 py-2 bg-stone-50 dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-colors placeholder:text-stone-400"
-                        onClick={()=>setShowCustomForm(prev=>!prev)}>
+                        onClick={()=>{setShowCustomForm(prev=>!prev);setShowTemplates(false)}}>
                         Custom Workout
                     </button>
                 </div>
 
                 {showCustomForm && <CustomExerciseForm  onSave={onSaveCustomExercise} onCloseForm={()=>setShowCustomForm(false)}/>}
 
+                {showTemplates && (
+                    <div className="flex flex-col gap-3 mb-4">
+                   {recentWorkouts.length > 0 ? (
+                        recentWorkouts.map(workout => (
+                            <div
+                                key={workout.id}
+                                className="border border-stone-200 dark:border-stone-600 rounded-xl p-4 bg-white dark:bg-stone-800 hover:shadow-md hover:scale-[1.01] transition-all cursor-pointer"
+                                onClick={() => handleUseTemplate(workout)}
+                            >
+                                {/* Header */}
+                                <div className="flex items-center justify-between mb-2">
+                                    <h2 className="text-sm font-medium text-stone-700 dark:text-stone-200">
+                                    {dayjs(workout.date).format("DD MMM YYYY")}
+                                    </h2>
+
+                                    <span className="text-xs text-stone-400">
+                                    {workout.exercises.length} exercises
+                                    </span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {workout.exercises.map(ex => (
+                                        <span key={ex.exerciseId}
+                                        className="text-xs px-2 py-1 rounded-full bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300"
+                                        >
+                                        {ex.exerciseName} - {ex.sets}x{ex.reps}
+                                      </span>
+                                    ))}
+                                </div>
+
+                                {/* CTA */}
+                                <div className="mt-3 text-xs text-brand font-medium">
+                                    Click to reuse →
+                                </div>
+                            </div>
+                        ))) : (
+                            <p className="text-sm text-stone-400">No past workouts yet</p>
+                        )}
+                   </div>
+                    
+                )}
                 
             
                 {/*Select exercises */}

@@ -152,6 +152,7 @@ function App() {
         onSave={addWorkout}
         onSaveCustomExercise={addCustomExercise}
         customExercises = {customExercises}
+        workouts = {workouts}
       />
 
       <button onClick={()=>{
