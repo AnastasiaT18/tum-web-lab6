@@ -70,10 +70,7 @@ function AddWorkoutModal({isOpen, onClose, onSave, onSaveCustomExercise, customE
 
     const sortedWorkouts = [...workouts].sort((a,b)=> new Date(b.date) - new Date(a.date));
     const recentWorkouts = sortedWorkouts.slice(0,3);
-    console.log(recentWorkouts);
-
-
-
+    
 
     if (!isOpen) return null;
 
@@ -107,7 +104,8 @@ function AddWorkoutModal({isOpen, onClose, onSave, onSaveCustomExercise, customE
                     </button>
                 </div>
 
-                {showCustomForm && <CustomExerciseForm  onSave={onSaveCustomExercise} onCloseForm={()=>setShowCustomForm(false)}/>}
+                {showCustomForm && 
+                <CustomExerciseForm  onSave={onSaveCustomExercise} onCloseForm={()=>setShowCustomForm(false)} allExercises={allExercises}/>}
 
                 {showTemplates && (
                     <div className="flex flex-col gap-3 mb-4">

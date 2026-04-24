@@ -1,7 +1,7 @@
 import { exercises as availableExercises } from "../data/exercises";
 import {useState} from "react";
 
-function CustomExerciseForm ({ onSave, onCloseForm }){
+function CustomExerciseForm ({ onSave, onCloseForm, allExercises }){
 
     const [customExerciseName, setCustomExerciseName] = useState("");
     const [customExerciseMuscles, setCustomExerciseMuscles] = useState([]);
@@ -30,7 +30,7 @@ function CustomExerciseForm ({ onSave, onCloseForm }){
             return;
         }
 
-        if (exercises.some(ex => ex.name.toLowerCase() === customExerciseName.toLowerCase())) {
+        if (allExercises.some(ex => ex.name.toLowerCase() === customExerciseName.toLowerCase())) {
             alert("An exercise with this name already exists. Please choose a different name.");
             return;
         }

@@ -16,7 +16,6 @@ function BodyMap({ workouts = [] , gender, handleGenderChange}) {
         intensity
     }))
 
-    console.log(bodyData)
 
     function musclesToHighlight(workouts){
         const sorted = [...workouts].sort((a,b) => new Date(b.date) - new Date(a.date));
