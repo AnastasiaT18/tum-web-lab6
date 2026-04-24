@@ -1,4 +1,4 @@
-import {useState, useEffect } from "react"
+import {useState, useEffect, use } from "react"
 import Navbar from "./components/Navbar"
 import BodyMap from "./components/BodyMap"
 import AddWorkoutModal from "./components/AddWorkoutModal"
@@ -35,6 +35,12 @@ function App() {
     return parsed || 3;
   })
 
+  const [customExercises, setCustomExercises] = useState(()=>{
+    const saved = localStorage.getItem("customExercises");
+    const parsed = JSON.parse(saved);
+    return parsed || [];
+  });
+
   useEffect(() => {
     localStorage.setItem("workouts", JSON.stringify(workouts));
   }, [workouts])
@@ -42,6 +48,10 @@ function App() {
   useEffect (() => {
     localStorage.setItem("weeklyGoal", JSON.stringify(weeklyGoal));
   }, [weeklyGoal])
+
+  useEffect(() => {
+    localStorage.setItem("customExercises", JSON.stringify(customExercises));
+  }, [customExercises])
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode)
@@ -71,6 +81,11 @@ function App() {
 
   const handleGenderChange = (gender) => {
     setGender(gender);
+  }
+
+  const addCustomExercise = (exercise) => {
+    setCustomExercises(prev => [...prev, exercise]);
+    console.log(customExercises);
   }
 
   return (
@@ -135,6 +150,9 @@ function App() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={addWorkout}
+        onSaveCustomExercise={addCustomExercise}
+        customExercises = {customExercises}
+        workouts = {workouts}
       />
 
       <button onClick={()=>{
