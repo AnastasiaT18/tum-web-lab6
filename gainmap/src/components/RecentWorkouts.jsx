@@ -4,16 +4,20 @@ import toast from "react-hot-toast";
 import {useState} from "react";
 
 import { useRef } from "react";
+import { CiFilter } from "react-icons/ci";
+
+import { exercises as availableExercises } from "../data/exercises";
+
 
 
 function RecentWorkouts({ workouts = [], onDelete, toggleLike, onSelectingWorkout }){
-    const sortedWorkouts = [...workouts].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0,5);
+    const sortedWorkouts = [...workouts].sort((a,b) => new Date(b.date) - new Date(a.date));
 
-    const [visibleCount, setVisibleCount] = useState(2);
-
-    let visibleWorkouts = sortedWorkouts.slice(0, visibleCount);
-
+    const [visibleCount, setVisibleCount] = useState(3);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [filter, setFilter] = useState("all");
     const lastItemRef = useRef(null);
+
 
 
     const handleDelete = (id) => {
@@ -35,9 +39,80 @@ function RecentWorkouts({ workouts = [], onDelete, toggleLike, onSelectingWorkou
             lastItemRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 100);
     }
+
+    const handleFiltering = (option) => {
+        setFilter(option);
+    }
+
+    
+    const getFilteredWorkouts = () => {
+        switch(filter){
+            case "liked":
+                return sortedWorkouts.filter(w => w.liked);
+            case "all":
+                return sortedWorkouts;
+            default:
+                return sortedWorkouts.filter(w => w.exercises.some(ex => ex.muscles.includes(filter)));
+        }
+
+    }
+
+    let filteredWorkouts = getFilteredWorkouts();
+    let visibleWorkouts = filteredWorkouts.slice(0, visibleCount);
+
+    const getAllMuscles = () => {
+        const muscleSet = new Set();
+        availableExercises.forEach(ex => ex.muscles.forEach(m => muscleSet.add(m)));
+        return Array.from(muscleSet);
+    }
+
+    const allMuscles = getAllMuscles();
+
     return (
         <div >
-            <h2 className="text-lg text-stone-800 dark:text-stone-200 mb-4">Recent Workouts</h2>
+            <div className="flex items-center justify-between">
+                <h2 className="text-lg text-stone-800 dark:text-stone-200 mb-2">Recent Workouts</h2>
+                <button className="rounded-lg hover:bg-stone-200 dark:hover:bg-stone-600 p-2 transition-colors"
+                    onClick={()=>setIsFilterOpen(prev => !prev)}>
+                    <CiFilter className="text-stone-500 "/>
+                </button>
+            </div>
+
+            {isFilterOpen && (
+                <div className="">
+                    <div className="flex gap-4 mb-4">
+                        <button
+                            onClick = {()=>handleFiltering("all")}
+                            className={`mb-2 p-2 rounded-full text-sm transition-colors
+                                ${filter === "all"
+                                    ? "bg-brand text-white"
+                                    : "bg-stone-100 dark:bg-stone-700 dark:text-white"}
+                            `}
+                        >All</button>
+                        <button onClick = {()=>handleFiltering("liked")}
+                            className={`mb-2 p-2 rounded-full text-sm transition-colors flex items-center gap-1
+                                ${filter === "liked"
+                                    ? "bg-brand text-white"
+                                    : "bg-stone-100 dark:bg-stone-700 dark:text-white"}
+                            `}>
+                        <FiHeart/>Liked </button>
+                    </div>
+                    <p className="text-sm mb-2">Filter by muscle:</p>
+                    <div className="flex flex-wrap gap-1 mb-2 ">
+                        {allMuscles.map(muscle=>(
+                            <button key={muscle} 
+                            onClick = {()=>handleFiltering(muscle)}
+                            className={`mb-2 p-2 rounded-full text-sm transition-colors flex items-center gap-1
+                                ${filter === muscle
+                                    ? "bg-brand text-white"
+                                    : "bg-stone-100 dark:bg-stone-700 dark:text-white"}
+                            `}>
+                                {muscle}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {visibleWorkouts.map((workout,index) =>(
                         <div key={workout.id} ref={index === visibleWorkouts.length - 1 ? lastItemRef : null}
