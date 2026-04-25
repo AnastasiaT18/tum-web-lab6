@@ -16,6 +16,9 @@ export const exercises = [
   { id: "sumoSquats", name: "Sumo Squats", muscles: ["adductors", "quadriceps", "gluteal"] },
   { id: "toeraises", name: "Toe Raises", muscles: ["tibialis"] },
   { id: "sidelunges", name: "Side Lunges", muscles: ["adductors", "quadriceps", "gluteal"] },
+  { id: "bulgariansplitsquat", name: "Bulgarian Split Squat", muscles: ["quadriceps", "gluteal", "hamstring", "adductors"] },
+  { id: "pistolsquat", name: "Pistol Squat", muscles: ["quadriceps", "gluteal", "hamstring", "adductors"] },
+  { id: "stepups", name: "Step-ups", muscles: ["quadriceps", "gluteal", "hamstring"] },
 
   // Core
   { id: "plank", name: "Plank", muscles: ["abs", "obliques"] },
