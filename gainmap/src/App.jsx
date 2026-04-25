@@ -159,6 +159,7 @@ function App() {
         onClose={()=>setIsGoalModalOpen(false)} 
         onSave={updateWeeklyGoal} 
         weeklyGoal={weeklyGoal}
+        onReset = {()=>{localStorage.clear(); setWorkouts([]); setWeeklyGoal(3); setCustomExercises([]);}}
       />
 
       <WorkoutModal 

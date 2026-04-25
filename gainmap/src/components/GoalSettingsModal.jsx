@@ -1,7 +1,7 @@
 import { IoMdCheckmark } from "react-icons/io";
 import {useState } from "react"
 
-function GoalSettingsModal ({ isModalOpen, onClose, onSave, weeklyGoal}){
+function GoalSettingsModal ({ isModalOpen, onClose, onSave, weeklyGoal, onReset}){
 
     const [goal, setGoal] = useState(String(weeklyGoal));
    
@@ -65,22 +65,36 @@ function GoalSettingsModal ({ isModalOpen, onClose, onSave, weeklyGoal}){
                     </div>
                 </div>
 
+
+
                     {/* Footer */}
-                    <div className="flex gap-3 px-6 pb-5">
-                        <button
-                            onClick={onClose}
-                            className="flex-1 px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 text-sm hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
-                            Cancel
-                        </button>
-                        <button
-                            onClick={()=>{
-                                const num = Math.max(1, Math.min(7, parseInt(goal) || 1))
-                                onSave(num);
-                                onClose();
-                            }}
-                            className="flex-1 px-4 py-2.5 rounded-xl bg-brand text-white text-sm font-medium hover:bg-brand-light transition-colors shadow-sm shadow-brand/30">
-                            Save Goal
-                        </button>
+                    <div className="flex flex-col gap-3 px-6 pb-5">
+
+                        <div className="flex flex-row gap-3">
+                            <button
+                                onClick={onClose}
+                                className="flex-1 px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 text-sm hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
+                                Cancel
+                            </button>
+                            <button
+                                onClick={()=>{
+                                    const num = Math.max(1, Math.min(7, parseInt(goal) || 1))
+                                    onSave(num);
+                                    onClose();
+                                }}
+                                className="flex-1 px-4 py-2.5 rounded-xl bg-brand text-white text-sm font-medium hover:bg-brand-light transition-colors shadow-sm shadow-brand/30">
+                                Save Goal
+                            </button>
+                        </div>
+                        <div className="border-t border-stone-100 dark:border-stone-800 pt-4 mt-2">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">Danger Zone</p>
+                            <button
+                                onClick={() => { if (window.confirm("Reset all data? This cannot be undone.")) { onReset(); onClose(); } }}
+                                className="w-full px-4 py-2 rounded-xl border border-red-200 dark:border-red-900 text-red-500 text-sm hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+                            >
+                                Reset all data
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
