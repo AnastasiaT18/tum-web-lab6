@@ -1,12 +1,37 @@
 @import "tailwindcss";
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 * {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-  }
+  font-family: 'Geist', sans-serif;
+}
 
-  @theme {
-    --font-sans: 'Plus Jakarta Sans', sans-serif;
-    --color-brand: oklch(38% 0.189 293.745);
+@theme {
+  --font-sans: 'Geist', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+  --color-brand: oklch(45% 0.22 293.745);
+  --color-brand-light: oklch(55% 0.22 293.745);
+  --color-brand-dark: oklch(35% 0.22 293.745);
+}
 
-  }
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(75% 0 0);
+  border-radius: 999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: oklch(40% 0 0);
+}
+
+/* Smooth number input arrows hidden */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  opacity: 0.4;
+}

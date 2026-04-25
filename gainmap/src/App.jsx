@@ -1,4 +1,4 @@
-import {useState, useEffect, use } from "react"
+import {useState, useEffect } from "react"
 import Navbar from "./components/Navbar"
 import BodyMap from "./components/BodyMap"
 import AddWorkoutModal from "./components/AddWorkoutModal"
@@ -17,28 +17,24 @@ function App() {
   const [darkMode, setDarkMode] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
-
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false);
   const [gender, setGender] = useState("female")
 
 
   const [workouts, setWorkouts] = useState(()=>{
-    const saved = localStorage.getItem("workouts");
-    const parsed = JSON.parse(saved);
-    return parsed || [];
+    try { return JSON.parse( localStorage.getItem("workouts")) || [];}
+    catch {return [];}
   })
 
   const [weeklyGoal, setWeeklyGoal] = useState(()=>{
-    const saved = localStorage.getItem("weeklyGoal");
-    const parsed = JSON.parse(saved);
-    return parsed || 3;
+    try{return JSON.parse(localStorage.getItem("weeklyGoal")) || 3;
+    }catch {return 3;}
   })
 
   const [customExercises, setCustomExercises] = useState(()=>{
-    const saved = localStorage.getItem("customExercises");
-    const parsed = JSON.parse(saved);
-    return parsed || [];
+    try{return JSON.parse(localStorage.getItem("customExercises")) || [];
+    }catch{return [];}
   });
 
   useEffect(() => {
@@ -90,59 +86,62 @@ function App() {
 
   return (
     <>
-    <Toaster/>
-    <div className="font-sans min-h-screen bg-stone-50 dark:bg-stone-900 transition-colors duration-300">
+    <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            borderRadius: '10px',
+            background: darkMode ? '#292524' : '#fff',
+            color: darkMode ? '#e7e5e4' : '#1c1917',
+            border: darkMode ? '1px solid #44403c' : '1px solid #e7e5e4',
+            fontSize: '14px',
+          },
+        }}
+      />
+    <div className="font-sans min-h-screen bg-stone-50 dark:bg-stone-950 transition-colors duration-300">
       <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-      <main className="max-w-full mx-auto px-6  grid lg:grid-cols-2 gap-6">
+      <main className="max-w-full mx-auto px-4 sm:px-6 pb-8 grid lg:grid-cols-2 gap-4 sm:gap-6">
 
-        {/* left side-body map */} 
-        <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6 flex flex-col">
+        {/* Left - body map */} 
+        <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm border border-stone-200/60 dark:border-stone-800 p-5 sm:p-6 flex flex-col">
           <BodyMap workouts={workouts} gender = {gender} handleGenderChange={handleGenderChange} />
-            <div className="mt-4 mb-4 flex flex-wrap flex-row gap-4 text-xs text-stone-500 dark:text-stone-300 justify-center">
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded bg-stone-300 dark:bg-stone-600" />
-                  <span> No recent activity ( &gt; 7 days )</span>
+            
+          <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-xs text-stone-500 dark:text-stone-400 justify-center">
+              {[
+                { color: "bg-stone-300 dark:bg-stone-600", label: "No activity (>7 days)" },
+                { color: "bg-yellow-400", label: "3–7 days ago" },
+                { color: "bg-orange-400", label: "1–3 days ago" },
+                { color: "bg-red-500", label: "≤1 day ago" },
+              ].map(({ color, label }) => (
+                <div key={label} className="flex items-center gap-1.5">
+                  <div className={`w-2.5 h-2.5 rounded-sm ${color}`} />
+                  <span>{label}</span>
                 </div>
+              ))}
+            </div>
+          </div>
 
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded bg-yellow-400" />
-                    <span>Moderate inactivity ( 3 – 7 days )</span>
-                </div>
-
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded bg-orange-400" />
-                    <span>Recent activity ( 1 – 3 days )</span>
-                </div>
-
-              <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded bg-red-500" />
-                      <span>Very recent activity ( &le; 1 day )</span>
-                  </div>
-
-              </div>
-        </div>
-
-        {/* right side - stats*/}
+        {/* Right - stats*/}
         <div className="flex flex-col gap-4">
-          <div className="flex flex-row gap-4">
-            <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6 flex-1">
+          <div className="flex flex-row sm:flex-row gap-4">
+            <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm border border-stone-200/60 dark:border-stone-800 p-5 sm:p-6 flex-1">              
               <GoalDisplay weeklyGoal={weeklyGoal} workouts={workouts} onOpenSettings={()=>setIsGoalModalOpen(true)}/>
             </div>
-            <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6 flex-1">
+            <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm border border-stone-200/60 dark:border-stone-800 p-5 sm:p-6 flex-1">
               <ActivityCalendar workouts={workouts} />
             </div>
           </div>
-          <div className="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 p-6">
-            <RecentWorkouts workouts={workouts} onDelete={deleteWorkout} toggleLike={toggleLike} 
-              onSelectingWorkout={(workout)=>{setSelectedWorkout(workout); setIsWorkoutModalOpen(true)}}/>
+
+        <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm border border-stone-200/60 dark:border-stone-800 p-5 sm:p-6">
+          <RecentWorkouts workouts={workouts} onDelete={deleteWorkout} toggleLike={toggleLike} 
+            onSelectingWorkout={(workout)=>{setSelectedWorkout(workout); setIsWorkoutModalOpen(true)}}/>
           </div>
 
           <button onClick={() => setIsModalOpen(true)}
-            className = " px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-dark transition-colors">
-            Add Workout
+            className="w-full px-4 py-3 bg-brand text-white rounded-xl font-medium text-sm hover:bg-brand-light active:scale-[0.98] transition-all shadow-sm shadow-brand/30">
+            + Add Workout
           </button>
         </div>
-
       </main>
 
       {/* Add Workout Modal */}
@@ -154,11 +153,6 @@ function App() {
         customExercises = {customExercises}
         workouts = {workouts}
       />
-
-      <button onClick={()=>{
-        localStorage.clear(); 
-        setWorkouts([])}}> 
-        Clear local storage</button>
 
       <GoalSettingsModal 
         isModalOpen={isGoalModalOpen} 

@@ -10,7 +10,6 @@ function BodyMap({ workouts = [] , gender, handleGenderChange}) {
 
 
     const muscleMap = musclesToHighlight(workouts)
-
     const bodyData = Object.entries(muscleMap).map(([slug, intensity]) => ({
         slug,
         intensity
@@ -99,7 +98,7 @@ function BodyMap({ workouts = [] , gender, handleGenderChange}) {
                     </button>
                 </div>
             
-            {/* Front/Back Toggle*/}
+                {/* Front/Back Toggle*/}
                 <div className="flex ">
                     <button onClick={() => setSide("front")}
                         className={`px-3 rounded-l-lg text-sm font-medium border transition-colors
@@ -119,7 +118,6 @@ function BodyMap({ workouts = [] , gender, handleGenderChange}) {
                             Back
                     </button>
                 </div>
-
             </div>
 
             <div className = "relative body-map-container"
@@ -139,20 +137,18 @@ function BodyMap({ workouts = [] , gender, handleGenderChange}) {
 
                     {selectedPart && (
                                 <div 
-                                className="absolute z-10 px-3 py-2 bg-stone-800/95 dark:bg-stone-900 text-white rounded-sm pointer-events-none w-44"
+                                 className="absolute z-10 px-3 py-2.5 bg-stone-900 dark:bg-stone-950 text-white rounded-xl pointer-events-none w-48 shadow-xl border border-white/10"
                                 style={{
                                     left: tooltipPos.x+10,
                                     top: tooltipPos.y + 10
                                 }}>
-                                    <h3
-                                        className="font-medium capitalize mb-1"
-                                    >{selectedPart}</h3>
-                                    {(dayjs().diff(dayjs(getLastRecentWorkoutForMuscle(selectedPart)), "day") > 7)
+                                    <h3 className="font-semibold capitalize text-sm mb-1">{selectedPart}</h3>
+                                    {(dayjs().diff(dayjs(getLastRecentWorkoutForMuscle(selectedPart)), "day", true) > 7)
                                     ||(!getLastRecentWorkoutForMuscle(selectedPart) ) ? (
-                                        <p className="text-sm"> No recent activity</p>
+                                        <p className="text-xs text-stone-400"> No recent activity</p>
                                     )
                                     : (
-                                        <p className="text-sm"> Last worked out: {dayjs(getLastRecentWorkoutForMuscle(selectedPart)).format("DD/MM/YYYY")}</p>
+                                        <p className="text-xs text-stone-300"> Last trained: <span className="text-white font-medium">{dayjs(getLastRecentWorkoutForMuscle(selectedPart)).format("DD/MM/YYYY")}</span></p>
                                     )
                                 }
                                 </div>

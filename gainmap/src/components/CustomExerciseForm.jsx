@@ -1,5 +1,6 @@
 import { exercises as availableExercises } from "../data/exercises";
 import {useState} from "react";
+import { getAllMuscles } from "./RecentWorkouts";
 
 function CustomExerciseForm ({ onSave, onCloseForm, allExercises }){
 
@@ -7,21 +8,16 @@ function CustomExerciseForm ({ onSave, onCloseForm, allExercises }){
     const [customExerciseMuscles, setCustomExerciseMuscles] = useState([]);
 
 
-    const getAllMuscles = () => {
-        const muscleSet = new Set();
-        availableExercises.forEach(ex => ex.muscles.forEach(m => muscleSet.add(m)));
-        return Array.from(muscleSet);
-    }
+    // const getAllMuscles = () => {
+    //     const muscleSet = new Set();
+    //     availableExercises.forEach(ex => ex.muscles.forEach(m => muscleSet.add(m)));
+    //     return Array.from(muscleSet);
+    // }
 
     const toggleMuscle = (muscle) =>{
-        const muscleIsSelected = customExerciseMuscles.includes(muscle);
-
-        if(muscleIsSelected){
-            setCustomExerciseMuscles(prev => prev.filter(m => m !== muscle));
-        }
-        else{
-            setCustomExerciseMuscles(prev => [...prev, muscle]);
-        }
+        setCustomExerciseMuscles(prev => 
+            prev.includes(muscle) ? prev.filter(m => m !== muscle) : [...prev, muscle]
+        );
     }
 
     const handleSaveCustomExercise = () => {
@@ -55,53 +51,53 @@ function CustomExerciseForm ({ onSave, onCloseForm, allExercises }){
     const allMuscles = getAllMuscles(); 
     
     
-
-
     return (
-            <div className="w-full border bg-stone-50 dark:bg-stone-700 border-stone-200 dark:border-stone-600 rounded-lg px-3 py-2 mb-4">
-                <div>
-                    <label className = "text-sm text-stone-500 dark:text-stone-400">Exercise Name</label>
-                    <input type="text" placeholder="e.g., Handstand, Pilates ..." onChange={(e)=>setCustomExerciseName(e.target.value)} value={customExerciseName}
-                    className="w-full border border-stone-200 dark:border-stone-600 rounded-lg px-3 py-2 bg-stone-50 dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-colors placeholder:text-stone-400"
-                    ></input>
-                </div>
-                <div>
-                    <label className = "text-sm text-stone-500 dark:text-stone-400">Muscles</label>
-                    <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
-                    {allMuscles.map(muscle => {
-                        const muscleIsSelected = !!customExerciseMuscles.find(m => m === muscle)
-                        
-                        return (
-                            <div key={muscle} className="flex items-center gap-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg cursor-pointer px-2 py-1 transition-colors">
-                                <button
-                                    key={muscle}
-                                    type="button"
-                                    onClick={() => toggleMuscle(muscle)}
-                                    className={`
-                                        px-3 py-1.5 rounded-full text-xs font-medium border transition-all
-                                        ${muscleIsSelected
-                                        ? "bg-brand text-white border-brand scale-105"
-                                        : "bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 border-stone-300 dark:border-stone-600 hover:bg-stone-200 dark:hover:bg-stone-600"}
-                                    `}
-                                    >
+        <div className="bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl p-4 flex flex-col gap-3">  
+            <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold tracking-wider uppercase  text-stone-400">Exercise Name</label>
+                    <input type="text" 
+                    placeholder="e.g., Handstand, Pilates ..." onChange={(e)=>setCustomExerciseName(e.target.value)} value={customExerciseName}
+                    className="w-full border border-stone-200 dark:border-stone-700 rounded-xl px-3 py-2.5 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand transition placeholder:text-stone-300 dark:placeholder:text-stone-600">  
+                    </input>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400">
+                    Muscles
+                </label>                    
+                <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                    {allMuscles.map(muscle => (                       
+                            <button
+                                key={muscle}
+                                type="button"
+                                onClick={() => toggleMuscle(muscle)}
+                                className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all
+                                    ${customExerciseMuscles.includes(muscle)
+                                      ? "bg-brand text-white border-brand shadow-sm shadow-brand/20"
+                                      : "bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:border-stone-300"
+                                    }`}
+                                >
                                     {muscle}
-                                    </button>
-                            </div>
-                        )
-                    }
-                    )}
-                    </div>
+                            </button>
+                        ))}
                 </div>
+            </div>
+
+            <div className="flex gap-2">
+                <button
+                onClick = {onCloseForm}
+                className="flex-1 px-3 py-2 rounded-xl text-sm border border-stone-200 dark:border-stone-700 text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors">
+                    Cancel
+                </button>  
 
                 <button
                     onClick={handleSaveCustomExercise}
-                    className="mt-3 px-3 py-2 bg-brand text-white text-sm rounded-lg hover:opacity-90 transition"
+                    className="flex-1 px-3 py-2 bg-brand text-white text-sm rounded-xl hover:bg-brand-light transition font-medium"
                     >
                     Save Custom Exercise
-                    </button>
-
-
+                </button>
             </div>
+        </div>
     );
     }
  

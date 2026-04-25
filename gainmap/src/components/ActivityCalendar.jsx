@@ -38,9 +38,9 @@ function ActivityCalendar ({workouts = []}) {
         }
 
         const lastDay = firstDay.endOf('month'); 
-        weekdayIndex = lastDay.day(); 
+        weekdayIndex = (lastDay.day()+6)%7; //adjusting so that Monday is 0 and Sunday is 6
 
-        for (let i=weekdayIndex; i<=6; i++){
+        for (let i=weekdayIndex; i<6; i++){
             data.push(null);
             }
 
@@ -78,31 +78,34 @@ function ActivityCalendar ({workouts = []}) {
 
 
   return (
-    <div className="flex flex-col  ">
-            <div className="flex flex-row justify-between items-start mb-4 ">
-                <h2 className="text-lg text-stone-800 dark:text-stone-200 mb-4 ">
-                    Activity
-                </h2>
-                <div className="flex gap-2 mt-1">
-                    <button onClick={goToPrevMonth} 
-                        className="text-sm p-1.5 items-center rounded-lg hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"> 
-                        <IoIosArrowBack/>
-                    </button>
-                    <p className="mt-0.5 text-sm">{months[currentMonth]} {currentYear}</p>
-                    <button onClick={goToNextMonth}
+    <div className="flex flex-col">
+        <div className="flex flex-row justify-between items-start mb-4 ">
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-stone-800 dark:text-stone-500 mb-4">
+                Activity
+            </h2>
+            
+            <div className="flex items-center gap-1">
+                <button onClick={goToPrevMonth} 
+                    className="p-1 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 dark:text-white transition-colors text-stone-800"> 
+                    <IoIosArrowBack size={14}/>
+                </button>
+                <span className="text-xs font-medium text-stone-800 dark:text-stone-300 w-20 text-center">{months[currentMonth]} {currentYear}</span>
+                <button onClick={goToNextMonth}
                         disabled={currentMonth === today.month() && currentYear === today.year()}
-                        className="text-sm p-1.5 items-center rounded-lg hover:bg-stone-200 dark:hover:bg-stone-700 disabled: transition-colors disabled:opacity-30 disabled:hover:bg-transparent">
-                        <IoIosArrowForward  />
-                    </button>
-                </div>
+                        className="p-1 rounded-lg hover:bg-stone-100 text-stone-800  dark:hover:bg-stone-800 dark:text-white transition-colors text-stone-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                        ><IoIosArrowForward size={14} />
+                </button>
             </div>
+        </div>
+
             <div className="gap-1 mb-1 flex flex-row items-center justify-center">  
                 {days.map((day, index) => (
-                    <span key={index} className="text-xs  text-stone-500 dark:text-stone-400 w-6 h-6 inline-flex items-center justify-center">
+                    <span key={index} className="text-[10px] font-medium text-stone-400 dark:text-white w-7 h-7 inline-flex items-center justify-center">
                         {day}
                     </span>
                 ))}
             </div>
+
             <div className="flex flex-col gap-1 items-center">
                 {activityData.map((week, weekIndex) => (
                     <div key={weekIndex} className="flex gap-1">
@@ -110,16 +113,16 @@ function ActivityCalendar ({workouts = []}) {
                             <div key={dayIndex} data-tooltip-id="calendar-tooltip"
                             data-tooltip-content={
                                 day
-                                  ? `${dayjs(day.date).format("DD/MM/YYYY")}: ${day.workoutDone ? "Workout done" : "No workout"}`
+                                  ? `${dayjs(day.date).format("D MMM")}: ${day.workoutDone ? "✓ Workout" : "Rest"}`
                                   : ""
                               }
-                            className={`w-8 h-8 flex text-xs rounded-full transition-all duration-150 justify-center items-center ${
+                            className={`w-7 h-7 flex text-[10px] font-medium rounded-lg transition-all duration-150 justify-center items-center dark:text-white ${
                                 day
                                 ? day.workoutDone
-                                    ? "bg-green-500"
-                                    : "bg-gray-300 dark:bg-gray-600"
-                                : "bg-transparent"
-                            }  ${day && dayjs(day.date).isSame(dayjs(), 'day')? "ring-2 ring-brand" : ""} hover:scale-110`}>
+                                    ? "bg-emerald-500 text-white"
+                                    : "bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-600"
+                                : "bg-transparent text-transparent"
+                            }  ${day && dayjs(day.date).isSame(dayjs(), 'day')? "ring-2 ring-brand ring-offset-1 ring-offset-white dark:ring-offset-stone-900" : ""} hover:scale-110 cursor-default`}>
                                 {day ? dayjs(day.date).date() : ""}
                             </div>
                         ) )}

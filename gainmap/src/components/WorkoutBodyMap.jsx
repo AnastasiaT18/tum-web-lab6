@@ -2,6 +2,7 @@ import Body from "react-muscle-highlighter"
 import { useState } from 'react';
 
 function WorkoutBodyMap({ side, workout, gender }) {
+    
     const muscleMap = musclesToHighlight(workout)
 
     const bodyData = Object.entries(muscleMap).map(([slug, intensity]) => ({
@@ -42,7 +43,7 @@ function WorkoutBodyMap({ side, workout, gender }) {
     }
 
     return (
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center ">
 
         <Body
           data={bodyData}          
