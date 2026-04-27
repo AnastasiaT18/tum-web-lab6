@@ -7,6 +7,7 @@ import { SiTicktick } from "react-icons/si";
 
 
 
+
 function GoalDisplay({weeklyGoal = 0, workouts= [], onOpenSettings}) {
 
     function getCompletedDays(){
@@ -32,17 +33,29 @@ function GoalDisplay({weeklyGoal = 0, workouts= [], onOpenSettings}) {
         if (weeklyGoal === 0) return 0;
       
         let streak = 0;
-        let weekOffset = 0; // 0 = current week, 1 = last week, 2 = week before, etc.
+        const today = dayjs();
+        const weekdayIndex = (today.day() + 6) % 7; // Monday = 0
+
+        const startOfCurrentWeek = today.subtract(weekdayIndex, 'day').startOf('day');
+      
+        let weekOffset = 0;
+
+        const startOfThisWeek = startOfCurrentWeek;
+        const endOfThisWeek = startOfThisWeek.add(6, 'day').endOf('day');
+        const thisWeekWorkouts = workouts.filter(w => dayjs(w.date).isBetween(startOfThisWeek, endOfThisWeek, 'day', '[]'));
+        const thisWeekDays = new Set(thisWeekWorkouts.map(w => dayjs(w.date).format('YYYY-MM-DD'))).size;
+
+        if (thisWeekDays >= weeklyGoal) {
+            streak++;
+        }
+
+        weekOffset = 1; // Start checking from the previous week
       
         while (true) {
-          const today = dayjs();
-          const weekdayIndex = (today.day() + 6) % 7; // Monday = 0
-      
-          // Start and end of the week we're checking
-          const startOfWeek = today.subtract(weekdayIndex + weekOffset * 7, 'day').startOf('day');
+          const startOfWeek = startOfCurrentWeek.subtract(weekOffset * 7, 'day');
           const endOfWeek = startOfWeek.add(6, 'day').endOf('day');
-      
-          const workoutsThisWeek = workouts.filter(w =>
+
+        const workoutsThisWeek = workouts.filter(w =>
             dayjs(w.date).isBetween(startOfWeek, endOfWeek, 'day', '[]')
           );
           const uniqueDays = new Set(workoutsThisWeek.map(w => dayjs(w.date).format('YYYY-MM-DD'))).size;
@@ -58,7 +71,7 @@ function GoalDisplay({weeklyGoal = 0, workouts= [], onOpenSettings}) {
         return streak;
       }
 
-      const streak = getWeeklyStreak(workouts, weeklyGoal);
+    const streak = getWeeklyStreak(workouts, weeklyGoal);
 
 
     return (
