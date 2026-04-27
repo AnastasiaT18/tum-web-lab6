@@ -1,7 +1,7 @@
 import { IoMdCheckmark } from "react-icons/io";
 import {useState } from "react"
 
-function GoalSettingsModal ({ isModalOpen, onClose, onSave, weeklyGoal, onReset}){
+function GoalSettingsModal ({ isModalOpen, onClose, onSave, weeklyGoal, onReset,gender, handleGenderChange}){
 
     const [goal, setGoal] = useState(String(weeklyGoal));
    
@@ -29,6 +29,27 @@ function GoalSettingsModal ({ isModalOpen, onClose, onSave, weeklyGoal, onReset}
                 </div>
 
                 <div className="px-6 py-5 flex flex-col gap-5">
+
+                    <div className="flex ">
+                        <button onClick={()=>handleGenderChange("female")}
+                            className={`px-3 rounded-l-lg text-sm font-medium border transition-colors
+                                ${gender === "female"
+                                ? "bg-brand text-white border-brand"
+                                : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
+                                >
+                                Female
+                        </button>
+
+                        <button onClick={()=>handleGenderChange("male")}
+                            className={`px-3 py-1.5 rounded-r-lg text-sm font-medium border transition-colors
+                                ${gender === "male"
+                                ? "bg-brand text-white border-brand"
+                                : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
+                                >
+                                Male
+                        </button>
+                    </div>
+
                     <p className="text-sm text-stone-400 dark:text-stone-500">
                             Set your weekly workout goal. Your streak will track consecutive weeks where you hit this goal. Rest days won't break your streak!
                     </p>

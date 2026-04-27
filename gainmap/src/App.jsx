@@ -20,10 +20,13 @@ function App() {
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false);
-  const [gender, setGender] = useState("female")
 
   const importRef = useRef(null);
 
+
+const [gender, setGender] = useState(() => {
+  return localStorage.getItem("gender") || "female";
+})
 
   const [workouts, setWorkouts] = useState(()=>{
     try { return JSON.parse( localStorage.getItem("workouts")) || [];}
@@ -56,6 +59,10 @@ function App() {
     document.documentElement.classList.toggle("dark", darkMode)
   }, [darkMode])
 
+  useEffect(() => {
+    localStorage.setItem("gender", gender);
+  }, [gender])
+
 
   const addWorkout = (workout) => {
     setWorkouts(prev => [...prev, workout]);
@@ -85,7 +92,8 @@ function App() {
   }
 
   const handleExport = () => {
-    const json = JSON.stringify(workouts, null, 2);
+    const data = { workouts, weeklyGoal, customExercises };
+    const json = JSON.stringify(data, null, 2);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -104,12 +112,23 @@ const handleImport = (e) => {
     try {
       const imported = JSON.parse(event.target.result);
       
-      // Calculate newOnes BEFORE setWorkouts, using the current state snapshot
+      const importedWorkouts = imported.workouts || [];
+      const importedGoal = imported.weeklyGoal || null;
+      const importedExercises = imported.customExercises || [];
+
       const existingIds = new Set(workouts.map(w => w.id));
-      const newOnes = imported.filter(w => !existingIds.has(w.id));
+      const newOnes = importedWorkouts.filter(w => !existingIds.has(w.id));
 
       setWorkouts(prev => [...prev, ...newOnes]);
-      
+
+      if (importedGoal) setWeeklyGoal(importedGoal);
+
+      const existingExerciseIds = new Set(customExercises.map(e => e.id));
+      const newExercises = importedExercises.filter(e => !existingExerciseIds.has(e.id));
+      setCustomExercises(prev => [...prev, ...newExercises]);
+
+      if (importedGender) setGender(importedGender);
+
       e.target.value = "";
       toast.success(newOnes.length > 0
         ? `Imported ${newOnes.length} new workout${newOnes.length !== 1 ? "s" : ""}`
@@ -223,6 +242,8 @@ const handleImport = (e) => {
         onSave={updateWeeklyGoal} 
         weeklyGoal={weeklyGoal}
         onReset = {()=>{localStorage.clear(); setWorkouts([]); setWeeklyGoal(3); setCustomExercises([]);}}
+        gender = {gender}
+        handleGenderChange={setGender}
       />
 
       <WorkoutModal 

@@ -78,25 +78,6 @@ function BodyMap({ workouts = [] , gender, handleGenderChange}) {
 
             {/* Gender Toggle*/}
             <div className="flex justify-between w-full">
-                <div className="flex ">
-                    <button onClick={()=>handleGenderChange("female")}
-                        className={`px-3 rounded-l-lg text-sm font-medium border transition-colors
-                            ${gender === "female"
-                            ? "bg-brand text-white border-brand"
-                            : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
-                            >
-                            Female
-                    </button>
-
-                    <button onClick={()=>handleGenderChange("male")}
-                        className={`px-3 py-1.5 rounded-r-lg text-sm font-medium border transition-colors
-                            ${gender === "male"
-                            ? "bg-brand text-white border-brand"
-                            : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
-                            >
-                            Male
-                    </button>
-                </div>
             
                 {/* Front/Back Toggle*/}
                 <div className="flex ">

@@ -47,20 +47,6 @@ function WorkoutModal ({workout, isOpen, onClose, gender, handleGenderChange}) {
                 </div>
 
 
-                    {/* Stats bar */}
-                    {/* <div className="flex border-b border-stone-100 dark:border-stone-800 divide-x divide-stone-100 dark:divide-stone-800">
-                    {[
-                        { label: "Exercises", value: workout.exercises.length },
-                        { label: "Total Sets", value: totalSets },
-                        { label: "Total Reps", value: totalVolume },
-                    ].map(({ label, value }) => (
-                        <div key={label} className="flex-1 py-3 text-center">
-                        <p className="text-lg font-bold text-stone-900 dark:text-white">{value}</p>
-                        <p className="text-xs text-stone-400">{label}</p>
-                        </div>
-                    ))}
-                    </div> */}
-
                 {/* CONTENT */}
                 <div className="flex flex-col md:flex-row flex-1 overflow-y-auto">
                    
@@ -116,25 +102,6 @@ function WorkoutModal ({workout, isOpen, onClose, gender, handleGenderChange}) {
                     <div className="w-full md:w-1/2 p-5 sm:p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xs font-semibold uppercase tracking-widest text-stone-400">Muscles Worked</h3>
-                                <div className="flex">
-                                    <button onClick={()=>handleGenderChange("female")}
-                                        className={`px-3 rounded-l-lg text-sm font-medium border transition-colors
-                                            ${gender === "female"
-                                            ? "bg-brand text-white border-brand"
-                                            : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
-                                            >
-                                            Female
-                                    </button>
-
-                                    <button onClick={()=>handleGenderChange("male")}
-                                        className={`px-3 py-1.5 rounded-r-lg text-sm font-medium border transition-colors
-                                            ${gender === "male"
-                                            ? "bg-brand text-white border-brand"
-                                            : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
-                                            >
-                                            Male
-                                    </button>
-                                </div>
 
                                 {/* Front/Back Toggle*/}
                                 <div className="flex ">
