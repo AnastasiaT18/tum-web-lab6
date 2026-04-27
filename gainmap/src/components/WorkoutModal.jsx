@@ -102,31 +102,11 @@ function WorkoutModal ({workout, isOpen, onClose, gender, handleGenderChange}) {
                     <div className="w-full md:w-1/2 p-5 sm:p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xs font-semibold uppercase tracking-widest text-stone-400">Muscles Worked</h3>
-
-                                {/* Front/Back Toggle*/}
-                                <div className="flex ">
-                                    <button onClick={() => setSide("front")}
-                                        className={`px-3 rounded-l-lg text-sm font-medium border transition-colors
-                                            ${side === "front"
-                                            ? "bg-brand text-white border-brand"
-                                            : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
-                                            >
-                                        Front
-                                    </button>
-
-                                    <button onClick={() => setSide("back")}
-                                        className={`px-3 py-1.5 rounded-r-lg text-sm font-medium border transition-colors
-                                            ${side === "back"
-                                            ? "bg-brand text-white border-brand"
-                                            : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
-                                            >
-                                        Back
-                                    </button>
-                                </div>
                         </div>
 
                         <div className="flex justify-center ">
-                            <WorkoutBodyMap side={side} workout={workout} gender={gender} />
+                            <WorkoutBodyMap side="front" workout={workout} gender={gender} />
+                            <WorkoutBodyMap side="back" workout={workout} gender={gender}  />
                         </div>
 
                         <div className="mt-4 flex flex-wrap gap-3 text-xs text-stone-400 justify-center">

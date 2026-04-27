@@ -162,8 +162,12 @@ const handleImport = (e) => {
       <main className="max-w-full mx-auto px-4 sm:px-6 pb-8 grid lg:grid-cols-2 gap-4 sm:gap-6">
 
         {/* Left - body map */} 
-        <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm border border-stone-200/60 dark:border-stone-800 p-5 sm:p-6 flex flex-col">
-          <BodyMap workouts={workouts} gender = {gender} handleGenderChange={handleGenderChange} />
+        <div className=" bg-white dark:bg-stone-900 rounded-2xl shadow-sm border border-stone-200/60 dark:border-stone-800 p-5 sm:p-6 flex flex-col">
+          <div className="flex">
+            <BodyMap workouts={workouts} gender = {gender} side="front" />
+            <BodyMap workouts={workouts} gender = {gender} side="back" />
+          </div>
+          
             
           <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-xs text-stone-500 dark:text-stone-400 justify-center">
               {[

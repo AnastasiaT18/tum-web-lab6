@@ -3,8 +3,7 @@ import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 
 
-function BodyMap({ workouts = [] , gender, handleGenderChange}) {
-    const [side, setSide] = useState("front")
+function BodyMap({ workouts = [] , gender, side}) {
     const [selectedPart, setSelectedPart] = useState(null)
     const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
 
@@ -75,31 +74,6 @@ function BodyMap({ workouts = [] , gender, handleGenderChange}) {
     return (
         <>
         <div className="flex flex-col items-center gap-4">
-
-            {/* Gender Toggle*/}
-            <div className="flex justify-between w-full">
-            
-                {/* Front/Back Toggle*/}
-                <div className="flex ">
-                    <button onClick={() => setSide("front")}
-                        className={`px-3 rounded-l-lg text-sm font-medium border transition-colors
-                            ${side === "front"
-                            ? "bg-brand text-white border-brand"
-                            : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
-                            >
-                            Front
-                    </button>
-
-                    <button onClick={() => setSide("back")}
-                        className={`px-3 py-1.5 rounded-r-lg text-sm font-medium border transition-colors
-                            ${side === "back"
-                            ? "bg-brand text-white border-brand"
-                            : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"                    }`}
-                            >
-                            Back
-                    </button>
-                </div>
-            </div>
 
             <div className = "relative body-map-container"
                 onMouseMove = {(e)=> {
