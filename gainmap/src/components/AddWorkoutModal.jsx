@@ -65,14 +65,6 @@ function AddWorkoutModal({isOpen, onClose, onSave, onSaveCustomExercise, customE
     }
      
 
-    const updateExercise = (exId, field, value) => {
-        setExercises(prev => prev.map(e =>
-            e.exerciseId === exId
-            ?   {...e, [field]: value}
-            : e
-        ))
-    }
-
     const handleSave = () => {
         if(exercises.length === 0) return
 

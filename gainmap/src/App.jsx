@@ -1,4 +1,4 @@
-import {useState, useEffect } from "react"
+import {useState, useEffect, useRef} from "react"
 import Navbar from "./components/Navbar"
 import BodyMap from "./components/BodyMap"
 import AddWorkoutModal from "./components/AddWorkoutModal"
@@ -8,8 +8,9 @@ import ActivityCalendar from "./components/ActivityCalendar";
 import GoalDisplay from "./components/GoalDisplay"
 import GoalSettingsModal from "./components/GoalSettingsModal";
 import WorkoutModal from "./components/WorkoutModal"
+import dayjs from "dayjs";
 
-
+import toast from "react-hot-toast";         
 
 
 function App() {
@@ -20,6 +21,8 @@ function App() {
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false);
   const [gender, setGender] = useState("female")
+
+  const importRef = useRef(null);
 
 
   const [workouts, setWorkouts] = useState(()=>{
@@ -81,6 +84,43 @@ function App() {
     setCustomExercises(prev => [...prev, exercise]);
   }
 
+  const handleExport = () => {
+    const json = JSON.stringify(workouts, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `gainmap-${dayjs().format("YYYY-MM-DD")}.json`;
+    toast.success(`Exported ${workouts.length} workouts`); // ← moved up, before the click
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+const handleImport = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const imported = JSON.parse(event.target.result);
+      
+      // Calculate newOnes BEFORE setWorkouts, using the current state snapshot
+      const existingIds = new Set(workouts.map(w => w.id));
+      const newOnes = imported.filter(w => !existingIds.has(w.id));
+
+      setWorkouts(prev => [...prev, ...newOnes]);
+      
+      e.target.value = "";
+      toast.success(newOnes.length > 0
+        ? `Imported ${newOnes.length} new workout${newOnes.length !== 1 ? "s" : ""}`
+        : "Nothing new to import"
+      );
+    } catch {
+      toast.error("Invalid file format");
+    }
+  };
+  reader.readAsText(file);
+};
   
 
 
@@ -141,6 +181,29 @@ function App() {
             className="w-full px-4 py-3 bg-brand text-white rounded-xl font-medium text-sm hover:bg-brand-light active:scale-[0.98] transition-all shadow-sm shadow-brand/30">
             + Add Workout
           </button>
+
+          <input
+              ref={importRef}
+              type="file"
+              accept=".json"
+              onChange={handleImport}
+              className="hidden"
+            />
+        <div className="flex gap-3">
+          <button
+                onClick={handleExport}
+                disabled={workouts.length === 0}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                ↑ Export JSON
+              </button>
+              <button
+                onClick={() => importRef.current.click()}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+              >
+                ↓ Import JSON
+              </button>
+            </div>
         </div>
       </main>
 
