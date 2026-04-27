@@ -28,6 +28,39 @@ function GoalDisplay({weeklyGoal = 0, workouts= [], onOpenSettings}) {
     const done = completedDays >= weeklyGoal;
 
 
+    function getWeeklyStreak(workouts, weeklyGoal) {
+        if (weeklyGoal === 0) return 0;
+      
+        let streak = 0;
+        let weekOffset = 0; // 0 = current week, 1 = last week, 2 = week before, etc.
+      
+        while (true) {
+          const today = dayjs();
+          const weekdayIndex = (today.day() + 6) % 7; // Monday = 0
+      
+          // Start and end of the week we're checking
+          const startOfWeek = today.subtract(weekdayIndex + weekOffset * 7, 'day').startOf('day');
+          const endOfWeek = startOfWeek.add(6, 'day').endOf('day');
+      
+          const workoutsThisWeek = workouts.filter(w =>
+            dayjs(w.date).isBetween(startOfWeek, endOfWeek, 'day', '[]')
+          );
+          const uniqueDays = new Set(workoutsThisWeek.map(w => dayjs(w.date).format('YYYY-MM-DD'))).size;
+      
+          if (uniqueDays >= weeklyGoal) {
+            streak++;
+            weekOffset++;
+          } else {
+            break;
+          }
+        }
+      
+        return streak;
+      }
+
+      const streak = getWeeklyStreak(workouts, weeklyGoal);
+
+
     return (
         <div>
             <div className="flex items-center justify-between mb-4 ">
@@ -52,6 +85,8 @@ function GoalDisplay({weeklyGoal = 0, workouts= [], onOpenSettings}) {
                         style={{ width: `${progress * 100}%` }}
                         />
                     </div>
+
+            
                     
                     <p className="text-xs text-stone-500 dark:text-stone-400">
                         {done
@@ -59,6 +94,14 @@ function GoalDisplay({weeklyGoal = 0, workouts= [], onOpenSettings}) {
                         : <>{weeklyGoal - completedDays} more day{weeklyGoal - completedDays !== 1 ? "s" : ""} to hit your goal</>
                         }
                     </p>
+
+                    <div>
+                        {streak > 0 && (
+                            <p className="text-xs text-amber-500 font-medium mt-1">
+                                🔥 {streak} week streak
+                            </p>
+                        )}
+                    </div>
                 
         </div>
     );
