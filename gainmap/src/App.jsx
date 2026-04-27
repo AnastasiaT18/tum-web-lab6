@@ -92,7 +92,7 @@ const [gender, setGender] = useState(() => {
   }
 
   const handleExport = () => {
-    const data = { workouts, weeklyGoal, customExercises };
+    const data = { workouts, weeklyGoal, customExercises, gender };
     const json = JSON.stringify(data, null, 2);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -115,6 +115,7 @@ const handleImport = (e) => {
       const importedWorkouts = imported.workouts || [];
       const importedGoal = imported.weeklyGoal || null;
       const importedExercises = imported.customExercises || [];
+      const importedGender = imported.gender || null;
 
       const existingIds = new Set(workouts.map(w => w.id));
       const newOnes = importedWorkouts.filter(w => !existingIds.has(w.id));
@@ -163,7 +164,7 @@ const handleImport = (e) => {
 
         {/* Left - body map */} 
         <div className=" bg-white dark:bg-stone-900 rounded-2xl shadow-sm border border-stone-200/60 dark:border-stone-800 p-5 sm:p-6 flex flex-col">
-          <div className="flex">
+          <div className="flex flex-col sm:flex-row justify-center">
             <BodyMap workouts={workouts} gender = {gender} side="front" />
             <BodyMap workouts={workouts} gender = {gender} side="back" />
           </div>
