@@ -1,8 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-
 const db = require('./db');
+const tokenRoute = require('./routes/token');  
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,6 +10,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+app.use('/api', tokenRoute);
 app.get('/', (req, res) => {
   res.json({ message: 'GainMap API is running' });
 });
