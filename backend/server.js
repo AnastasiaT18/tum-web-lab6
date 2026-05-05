@@ -6,6 +6,7 @@ const db = require('./db');
 const tokenRoute = require('./routes/token');  
 const workoutsRoute = require('./routes/workouts');
 const exerciseRoute = require('./routes/exercises');
+const musclesRoute = require('./routes/muscles');
 
 
 const app = express();
@@ -17,7 +18,7 @@ app.use(express.json());
 app.use('/api', tokenRoute);
 app.use('/api/workouts', workoutsRoute);
 app.use('/api/exercises', exerciseRoute);
-
+app.use('/api/muscles', musclesRoute);
 
 
 app.get('/', (req, res) => {

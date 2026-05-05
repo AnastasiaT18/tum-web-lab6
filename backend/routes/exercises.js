@@ -37,9 +37,10 @@ router.get('/:id', auth('VISITOR'), (req, res) => {
         SELECT e.id, e.name, GROUP_CONCAT(em.muscle_id) as muscles
         FROM exercises e
         LEFT JOIN exercise_muscles em ON e.id = em.exercise_id
-        WHERE e.id = ?`).get(req.params.id);
+        WHERE e.id = ?
+        GROUP BY e.id`).get(req.params.id);
 
-    if (!exercise) {
+    if (!exercise || !exercise.id) {
         return res.status(404).json({ message: 'Exercise not found' });
     }
 
@@ -60,6 +61,13 @@ router.post('/', auth('ADMIN'), (req,res)=>{
         return res.status(400).json({ message: 'Missing required fields' });
     }
 
+    muscles.forEach(muscleId => {
+        const muscleExists = db.prepare('SELECT id FROM muscles WHERE id = ?').get(muscleId);
+        if (!muscleExists) {
+            return res.status(400).json({ message: `Muscle ${muscleId} does not exist` });
+        }
+    });
+
     const insertExercise = db.prepare('INSERT INTO exercises (id, name) VALUES (?, ?)');
     const insertExerciseMuscle = db.prepare('INSERT INTO exercise_muscles (exercise_id, muscle_id) VALUES (?, ?)');
 
@@ -78,12 +86,14 @@ router.post('/', auth('ADMIN'), (req,res)=>{
 
 //DELETE
 router.delete('/:id', auth('ADMIN'), (req,res)=>{
-    const result = db.prepare('DELETE FROM exercises WHERE id = ?').run(req.params.id);
+    const exercise = db.prepare('SELECT * FROM exercises WHERE id = ?').get(req.params.id);
 
-    if (result.changes === 0){
-        return res.status(404).json({message: 'Exercise not found'});
-    }
-
+    const remove = db.transaction(()=>{
+        db.prepare('DELETE FROM exercise_muscles WHERE exercise_id = ?').run(req.params.id);
+        db.prepare('DELETE FROM exercises WHERE id = ?').run(req.params.id);
+    })
+    
+    remove();
     res.status(204).send();
 });
 
