@@ -1,6 +1,9 @@
 const Database = require('better-sqlite3');
 const db = new Database('gainmap.db');
 
+db.pragma('foreign_keys = ON');
+
+
 // Initialize tables
 db.exec(`
     CREATE TABLE IF NOT EXISTS muscles (
@@ -40,6 +43,5 @@ db.exec(`
 
     `);
 
-db.pragma('foreign_keys = ON');
 
 module.exports = db;
