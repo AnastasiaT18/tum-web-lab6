@@ -220,16 +220,8 @@ router.post('/', auth('ADMIN'), (req,res)=>{
 
 //DELETE
 router.delete('/:id', auth('ADMIN'), (req,res)=>{
-    const exercise = db.prepare('SELECT * FROM exercises WHERE id = ?').get(req.params.id);
-    if (!exercise) return res.status(404).json({ message: 'Exercise not found' });
-
-
-    const remove = db.transaction(()=>{
-        db.prepare('DELETE FROM exercise_muscles WHERE exercise_id = ?').run(req.params.id);
-        db.prepare('DELETE FROM exercises WHERE id = ?').run(req.params.id);
-    })
-    
-    remove();
+    const result = db.prepare('DELETE FROM exercises WHERE id = ?').run(req.params.id);
+    if (result.changes === 0) return res.status(404).json({ error: 'Exercise not found' });
     res.status(204).send();
 });
 

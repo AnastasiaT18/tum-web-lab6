@@ -4,17 +4,9 @@ import toast from "react-hot-toast";
 import {useState} from "react";
 import { useRef } from "react";
 import dayjs from "dayjs";
-import { exercises as availableExercises } from "../data/exercises";
 
 
-export function getAllMuscles(){
-    const muscleSet = new Set();
-    availableExercises.forEach(ex => ex.muscles.forEach(m => muscleSet.add(m)));
-    return Array.from(muscleSet).sort();
-}
-
-
-function RecentWorkouts({ workouts = [], onDelete, toggleLike, onSelectingWorkout }){
+function RecentWorkouts({ workouts = [], muscles, onDelete, toggleLike, onSelectingWorkout }){
     
     const sortedWorkouts = [...workouts].sort((a,b) => new Date(b.date) - new Date(a.date));
     const [visibleCount, setVisibleCount] = useState(3);
@@ -63,7 +55,6 @@ function RecentWorkouts({ workouts = [], onDelete, toggleLike, onSelectingWorkou
 
     const filteredWorkouts = getFilteredWorkouts();
     const visibleWorkouts = filteredWorkouts.slice(0, visibleCount);
-    const allMuscles = getAllMuscles();
 
     return (
         <div>
@@ -104,15 +95,15 @@ function RecentWorkouts({ workouts = [], onDelete, toggleLike, onSelectingWorkou
                     <p className="text-[10px] uppercase font-semibold tracking-wider text-stone-400 mb-2">By muscle</p>
                     
                     <div className="flex flex-wrap gap-1.5">
-                        {allMuscles.map(muscle=>(
-                            <button key={muscle} 
-                            onClick = {()=>handleFiltering(muscle)}
+                        {muscles.map(muscle=>(
+                            <button key={muscle.id} 
+                            onClick = {()=>handleFiltering(muscle.id)}
                             className={`flex items-center gap-1 px-3 py-1.5 rounded-2xl text-xs font-medium transition-all border
-                                ${filter === muscle
+                                ${filter === muscle.id
                                     ? "bg-brand text-white border-brand shadow-sm shadow-brand/20"
                                     : "bg-stone-50 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600"}
                             `}>
-                                {muscle}
+                                {muscle.name}
                             </button>
                         ))}
                     </div>

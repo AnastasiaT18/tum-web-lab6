@@ -12,6 +12,8 @@ import dayjs from "dayjs";
 
 import toast from "react-hot-toast";         
 
+import { api } from "./api"
+import { CiTrophy } from "react-icons/ci"
 
 function App() {
 
@@ -28,33 +30,50 @@ const [gender, setGender] = useState(() => {
   return localStorage.getItem("gender") || "female";
 })
 
-  const [workouts, setWorkouts] = useState(()=>{
-    try { return JSON.parse( localStorage.getItem("workouts")) || [];}
-    catch {return [];}
-  })
+  const [workouts, setWorkouts] = useState([]);
 
   const [weeklyGoal, setWeeklyGoal] = useState(()=>{
     try{return JSON.parse(localStorage.getItem("weeklyGoal")) || 3;
     }catch {return 3;}
   })
 
-  const [customExercises, setCustomExercises] = useState(()=>{
-    try{return JSON.parse(localStorage.getItem("customExercises")) || [];
-    }catch{return [];}
-  });
+  const [allExercises, setAllExercises] = useState([]);
+
+  const [muscles, setMuscles] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem("workouts", JSON.stringify(workouts));
-  }, [workouts])
+    api.getWorkouts()
+      .then(res => setWorkouts(res.data))
+      .catch(err => {
+        console.error("Failed to fetch workouts:", err);
+        toast.error("Failed to fetch workouts");
+       });
+  }, [])
+
+  useEffect(() => {
+    api.getExercises()
+      .then(res => setAllExercises(res.data))
+      .catch(err => {
+        console.error("Failed to fetch exercises:", err);
+        toast.error("Failed to fetch exercises");
+       });
+  }, []);
+
+  useEffect(() => {
+    api.getMuscles()
+      .then(res => setMuscles(res.data))
+      .catch(err => {
+        console.error("Failed to fetch muscles:", err);
+        toast.error("Failed to fetch muscles");
+       });
+  }, []);
+
 
   useEffect (() => {
     localStorage.setItem("weeklyGoal", JSON.stringify(weeklyGoal));
   }, [weeklyGoal])
 
-  useEffect(() => {
-    localStorage.setItem("customExercises", JSON.stringify(customExercises));
-  }, [customExercises])
-
+ 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode)
   }, [darkMode])
@@ -64,19 +83,48 @@ const [gender, setGender] = useState(() => {
   }, [gender])
 
 
-  const addWorkout = (workout) => {
-    setWorkouts(prev => [...prev, workout]);
+  const addWorkout = async (workout) => {
+    try{
+      const saved = await api.createWorkout({
+        id: workout.id,
+        date: workout.date,
+        exercises: workout.exercises.map(ex=>({
+          exerciseId: ex.exerciseId,
+          repsPerSet: ex.repsPerSet
+        }))
+      });
+
+      setWorkouts(prev => [...prev, saved]);
+    }catch (err){
+      console.error("Failed to save workout:", err);
+      toast.error("Failed to save workout");
+    }
   }
 
-  const deleteWorkout = (id) => {
-    setWorkouts(prev=> prev.filter(w=> w.id !== id));
+  const deleteWorkout = async (id) => {
+    try{
+      await api.deleteWorkout(id);
+      setWorkouts(prev => prev.filter(w=> w.id !== id));
+    }catch (err){
+      console.error("Failed to delete workout:", err);
+      toast.error("Failed to delete workout");
+    }
   }
 
-  const toggleLike = (id) => {
-    setWorkouts(prev => prev.map(w =>
-      w.id === id ? {...w, liked: !w.liked} : w
-    )
-  );
+  // console.log(workouts);
+
+  const toggleLike = async (id) => {
+    const workout = workouts.find(w => w.id === id);
+    try{
+      await api.updateWorkout(id, {
+        liked: !workout.liked});
+      setWorkouts(prev=>prev.map(w =>
+        w.id === id ? {...w, liked: !w.liked} : w
+      ));
+    }catch (err){
+      console.error("Failed to update workout:", err);
+      toast.error("Failed to update workout");
+    }
   }
 
   const updateWeeklyGoal = (newGoal) => {
@@ -87,60 +135,78 @@ const [gender, setGender] = useState(() => {
     setGender(gender);
   }
 
-  const addCustomExercise = (exercise) => {
-    setCustomExercises(prev => [...prev, exercise]);
+  const addCustomExercise = async (exercise) => {
+    try{
+      const saved = await api.createExercise(exercise);
+      setAllExercises(prev => [...prev, saved]);
+    }catch(err){
+      console.error("Failed to save custom exercise:", err);
+      toast.error("Failed to save custom exercise");
+    }
+    
   }
 
-  const handleExport = () => {
-    const data = { workouts, weeklyGoal, customExercises, gender };
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `gainmap-${dayjs().format("YYYY-MM-DD")}.json`;
-    toast.success(`Exported ${workouts.length} workouts`); // ← moved up, before the click
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-const handleImport = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    try {
-      const imported = JSON.parse(event.target.result);
-      
-      const importedWorkouts = imported.workouts || [];
-      const importedGoal = imported.weeklyGoal || null;
-      const importedExercises = imported.customExercises || [];
-      const importedGender = imported.gender || null;
-
-      const existingIds = new Set(workouts.map(w => w.id));
-      const newOnes = importedWorkouts.filter(w => !existingIds.has(w.id));
-
-      setWorkouts(prev => [...prev, ...newOnes]);
-
-      if (importedGoal) setWeeklyGoal(importedGoal);
-
-      const existingExerciseIds = new Set(customExercises.map(e => e.id));
-      const newExercises = importedExercises.filter(e => !existingExerciseIds.has(e.id));
-      setCustomExercises(prev => [...prev, ...newExercises]);
-
-      if (importedGender) setGender(importedGender);
-
-      e.target.value = "";
-      toast.success(newOnes.length > 0
-        ? `Imported ${newOnes.length} new workout${newOnes.length !== 1 ? "s" : ""}`
-        : "Nothing new to import"
-      );
-    } catch {
-      toast.error("Invalid file format");
+  const deleteExercise = async (id) => {
+    try{
+      await api.deleteExercise(id);
+      setAllExercises(prev => prev.filter(e=> e.id !== id));
+      toast.success("Exercise deleted");
+    }catch(err){
+      console.error("Failed to delete exercise:", err);
+      toast.error("Failed to delete custom exercise");
     }
-  };
-  reader.readAsText(file);
-};
+  }
+
+//   const handleExport = () => {
+//     const data = { workouts, weeklyGoal, customExercises, gender };
+//     const json = JSON.stringify(data, null, 2);
+//     const blob = new Blob([json], { type: "application/json" });
+//     const url = URL.createObjectURL(blob);
+//     const a = document.createElement("a");
+//     a.href = url;
+//     a.download = `gainmap-${dayjs().format("YYYY-MM-DD")}.json`;
+//     toast.success(`Exported ${workouts.length} workouts`); // ← moved up, before the click
+//     a.click();
+//     URL.revokeObjectURL(url);
+//   };
+
+// const handleImport = (e) => {
+//   const file = e.target.files[0];
+//   if (!file) return;
+//   const reader = new FileReader();
+//   reader.onload = (event) => {
+//     try {
+//       const imported = JSON.parse(event.target.result);
+      
+//       const importedWorkouts = imported.workouts || [];
+//       const importedGoal = imported.weeklyGoal || null;
+//       const importedExercises = imported.customExercises || [];
+//       const importedGender = imported.gender || null;
+
+//       const existingIds = new Set(workouts.map(w => w.id));
+//       const newOnes = importedWorkouts.filter(w => !existingIds.has(w.id));
+
+//       setWorkouts(prev => [...prev, ...newOnes]);
+
+//       if (importedGoal) setWeeklyGoal(importedGoal);
+
+//       const existingExerciseIds = new Set(customExercises.map(e => e.id));
+//       const newExercises = importedExercises.filter(e => !existingExerciseIds.has(e.id));
+//       setCustomExercises(prev => [...prev, ...newExercises]);
+
+//       if (importedGender) setGender(importedGender);
+
+//       e.target.value = "";
+//       toast.success(newOnes.length > 0
+//         ? `Imported ${newOnes.length} new workout${newOnes.length !== 1 ? "s" : ""}`
+//         : "Nothing new to import"
+//       );
+//     } catch {
+//       toast.error("Invalid file format");
+//     }
+//   };
+//   reader.readAsText(file);
+// };
   
 
 
@@ -197,7 +263,7 @@ const handleImport = (e) => {
           </div>
 
         <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm border border-stone-200/60 dark:border-stone-800 p-5 sm:p-6">
-          <RecentWorkouts workouts={workouts} onDelete={deleteWorkout} toggleLike={toggleLike} 
+          <RecentWorkouts workouts={workouts} muscles={muscles} onDelete={deleteWorkout} toggleLike={toggleLike} 
             onSelectingWorkout={(workout)=>{setSelectedWorkout(workout); setIsWorkoutModalOpen(true)}}/>
           </div>
 
@@ -210,11 +276,11 @@ const handleImport = (e) => {
               ref={importRef}
               type="file"
               accept=".json"
-              onChange={handleImport}
+              // onChange={handleImport}
               className="hidden"
             />
-        <div className="flex gap-3">
-          <button
+          {/* <div className="flex gap-3">
+            <button
                 onClick={handleExport}
                 disabled={workouts.length === 0}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
@@ -227,7 +293,7 @@ const handleImport = (e) => {
               >
                 ↓ Import JSON
               </button>
-            </div>
+          </div> */}
         </div>
       </main>
 
@@ -237,8 +303,9 @@ const handleImport = (e) => {
         onClose={() => setIsModalOpen(false)}
         onSave={addWorkout}
         onSaveCustomExercise={addCustomExercise}
-        customExercises = {customExercises}
+        allExercises = {allExercises}
         workouts = {workouts}
+        muscles = {muscles}
       />
 
       <GoalSettingsModal 
@@ -246,9 +313,10 @@ const handleImport = (e) => {
         onClose={()=>setIsGoalModalOpen(false)} 
         onSave={updateWeeklyGoal} 
         weeklyGoal={weeklyGoal}
-        onReset = {()=>{localStorage.clear(); setWorkouts([]); setWeeklyGoal(3); setCustomExercises([]);}}
         gender = {gender}
         handleGenderChange={setGender}
+        customExercises = {allExercises.filter(ex => ex.id.startsWith("custom-"))}
+        onDeleteExercise={deleteExercise}
       />
 
       <WorkoutModal 

@@ -43,7 +43,7 @@ async function authFetch(path, options = {}) {
  export const api = {
     getWorkouts: () => authFetch('/workouts?limit=100&offset=0'),
     getWorkout: (id) => authFetch(`/workouts/${id}`),
-    createWorkous: (workout) => authFetch('/workouts', {
+    createWorkout: (workout) => authFetch('/workouts', {
         method: 'POST',
         body: JSON.stringify(workout)
     }),
@@ -53,7 +53,7 @@ async function authFetch(path, options = {}) {
     }),
 
     updateWorkout: (id, data) => authFetch(`/workouts/${id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         body: JSON.stringify(data)
     }),
 

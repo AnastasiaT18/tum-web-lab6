@@ -1,9 +1,10 @@
 import { IoMdCheckmark } from "react-icons/io";
 import {useState } from "react"
 
-function GoalSettingsModal ({ isModalOpen, onClose, onSave, weeklyGoal, onReset,gender, handleGenderChange}){
+function GoalSettingsModal ({ isModalOpen, onClose, onSave, weeklyGoal, gender, handleGenderChange, customExercises, onDeleteExercise}){
 
     const [goal, setGoal] = useState(String(weeklyGoal));
+    console.log(customExercises);
    
     const buildExampleWeek = (goal) => {
         const days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
@@ -107,14 +108,39 @@ function GoalSettingsModal ({ isModalOpen, onClose, onSave, weeklyGoal, onReset,
                                 Save Goal
                             </button>
                         </div>
+
                         <div className="border-t border-stone-100 dark:border-stone-800 pt-4 mt-2">
-                            <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">Danger Zone</p>
-                            <button
-                                onClick={() => { if (window.confirm("Reset all data? This cannot be undone.")) { onReset(); onClose(); } }}
-                                className="w-full px-4 py-2 rounded-xl border border-red-200 dark:border-red-900 text-red-500 text-sm hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
-                            >
-                                Reset all data
-                            </button>
+                            {customExercises.length > 0 ? (
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">
+                                        Custom Exercises
+                                    </p>
+                                    <div className="flex flex-col gap-2">
+                                        {customExercises.map(ex => (
+                                            <div key={ex.id} className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-stone-50 dark:bg-stone-800 border border-stone-100 dark:border-stone-700">
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-sm font-medium text-stone-700 dark:text-stone-200">{ex.name}</span>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {ex.muscles.map(m => (
+                                                            <span key={m} className="text-[10px] px-2 py-0.5 rounded-full bg-stone-200 dark:bg-stone-600 text-stone-500 dark:text-stone-300">
+                                                                {m}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => onDeleteExercise(ex.id)}
+                                                    className="text-xs text-red-500 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors flex-shrink-0 ml-2"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-xs text-stone-400 text-center py-2">No custom exercises yet</p>
+                            )}
                         </div>
                     </div>
                 </div>

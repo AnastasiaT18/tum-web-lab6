@@ -1,18 +1,10 @@
-import { exercises as availableExercises } from "../data/exercises";
 import {useState} from "react";
-import { getAllMuscles } from "./RecentWorkouts";
 
-function CustomExerciseForm ({ onSave, onCloseForm, allExercises }){
+function CustomExerciseForm ({ onSave, onCloseForm, allExercises, muscles }){
 
     const [customExerciseName, setCustomExerciseName] = useState("");
     const [customExerciseMuscles, setCustomExerciseMuscles] = useState([]);
 
-
-    // const getAllMuscles = () => {
-    //     const muscleSet = new Set();
-    //     availableExercises.forEach(ex => ex.muscles.forEach(m => muscleSet.add(m)));
-    //     return Array.from(muscleSet);
-    // }
 
     const toggleMuscle = (muscle) =>{
         setCustomExerciseMuscles(prev => 
@@ -47,8 +39,6 @@ function CustomExerciseForm ({ onSave, onCloseForm, allExercises }){
         setCustomExerciseMuscles([]);
         onCloseForm();
     }
-
-    const allMuscles = getAllMuscles(); 
     
     
     return (
@@ -66,18 +56,18 @@ function CustomExerciseForm ({ onSave, onCloseForm, allExercises }){
                     Muscles
                 </label>                    
                 <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
-                    {allMuscles.map(muscle => (                       
+                    {muscles.map(muscle => (                       
                             <button
-                                key={muscle}
+                                key={muscle.id}
                                 type="button"
-                                onClick={() => toggleMuscle(muscle)}
+                                onClick={() => toggleMuscle(muscle.id)}
                                 className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all
-                                    ${customExerciseMuscles.includes(muscle)
+                                    ${customExerciseMuscles.includes(muscle.id)
                                       ? "bg-brand text-white border-brand shadow-sm shadow-brand/20"
                                       : "bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:border-stone-300"
                                     }`}
                                 >
-                                    {muscle}
+                                    {muscle.name}
                             </button>
                         ))}
                 </div>

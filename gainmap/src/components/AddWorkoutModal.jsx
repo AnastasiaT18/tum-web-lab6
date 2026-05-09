@@ -1,19 +1,19 @@
 import { useState } from "react";
-import { exercises as availableExercises } from "../data/exercises";
 import CustomExerciseForm from "./CustomExerciseForm";
 import dayjs from "dayjs";
 
-function AddWorkoutModal({isOpen, onClose, onSave, onSaveCustomExercise, customExercises, workouts}) {
+function AddWorkoutModal({isOpen, onClose, onSave, onSaveCustomExercise, allExercises, workouts, muscles}) {
     
     const [date, setDate] = useState(
         new Date().toISOString().slice(0,16) // format for datetime-local input
     );
+
     const [exercises, setExercises] = useState([]);
     const [targetExercise, setTargetExercise] = useState("");
     const [showCustomForm, setShowCustomForm] = useState(null);
     const [showTemplates, setShowTemplates] = useState(false);
 
-    const allExercises = [...availableExercises, ...customExercises];
+    
     const sortedWorkouts = [...workouts].sort((a,b)=> new Date(b.date) - new Date(a.date));
     const recentWorkouts = sortedWorkouts.slice(0,3);
     
@@ -148,7 +148,7 @@ function AddWorkoutModal({isOpen, onClose, onSave, onSaveCustomExercise, customE
 
                 {/* Custom form */}
                 {showCustomForm && 
-                <CustomExerciseForm  onSave={onSaveCustomExercise} onCloseForm={()=>setShowCustomForm(false)} allExercises={allExercises}/>}
+                <CustomExerciseForm  onSave={onSaveCustomExercise} onCloseForm={()=>setShowCustomForm(false)} allExercises={allExercises} muscles={muscles}/>}
 
                 {/* Templates */}
                 {showTemplates && (
