@@ -34,7 +34,6 @@ router.post('/token', (req, res) => {
     }
 
     const token = jwt.sign({role}, process.env.JWT_SECRET, {expiresIn: '1h'});
-    console.log('Generated token:', token);
 
     res.json({token});
 
