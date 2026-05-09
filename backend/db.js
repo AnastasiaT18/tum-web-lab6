@@ -17,8 +17,8 @@ db.exec(`
     );
 
     CREATE TABLE IF NOT EXISTS exercise_muscles (
-        exercise_id TEXT NOT NULL REFERENCES exercises(id),
-        muscle_id TEXT NOT NULL REFERENCES muscles(id),
+        exercise_id TEXT NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+        muscle_id TEXT NOT NULL REFERENCES muscles(id) ON DELETE CASCADE,
         PRIMARY KEY (exercise_id, muscle_id)
     );
 
@@ -31,7 +31,7 @@ db.exec(`
     CREATE TABLE IF NOT EXISTS workout_exercises (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         workout_id TEXT NOT NULL REFERENCES workouts(id) ON DELETE CASCADE,
-        exercise_id TEXT NOT NULL REFERENCES exercises(id)
+        exercise_id TEXT NOT NULL REFERENCES exercises(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS sets (

@@ -1,7 +1,7 @@
 import { IoMdCheckmark } from "react-icons/io";
 import {useState } from "react"
 
-function GoalSettingsModal ({ isModalOpen, onClose, onSave, weeklyGoal, onReset,gender, handleGenderChange}){
+function GoalSettingsModal ({ isModalOpen, onClose, onSave, weeklyGoal, gender, handleGenderChange, customExercises, onDeleteExercise}){
 
     const [goal, setGoal] = useState(String(weeklyGoal));
    
@@ -20,7 +20,7 @@ function GoalSettingsModal ({ isModalOpen, onClose, onSave, weeklyGoal, onReset,
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">                
-            <div className="bg-white dark:bg-stone-900 rounded-2xl w-full max-w-md shadow-2xl border border-stone-200/60 dark:border-stone-800">                
+            <div className="bg-white dark:bg-stone-900 rounded-2xl w-full max-w-lg shadow-2xl border border-stone-200/60 dark:border-stone-800 flex flex-col max-h-[90vh]">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100 dark:border-stone-800">
                     <h1 className="text-base font-semibold text-stone-900 dark:text-white">Weekly Goal</h1>
                     <button onClick={onClose}
@@ -28,7 +28,7 @@ function GoalSettingsModal ({ isModalOpen, onClose, onSave, weeklyGoal, onReset,
                     >✕</button>
                 </div>
 
-                <div className="px-6 py-5 flex flex-col gap-5">
+                <div className="px-6 py-5 flex flex-col gap-5 overflow-y-auto">
 
                     <div className="flex ">
                         <button onClick={()=>handleGenderChange("female")}
@@ -84,39 +84,60 @@ function GoalSettingsModal ({ isModalOpen, onClose, onSave, weeklyGoal, onReset,
                             {goal} workout{parseInt(goal) !== 1 ? "s" : ""} · {7 - goal} rest day{7 - goal !== 1 ? "s" : ""}
                         </p>
                     </div>
+
+                    <div className="flex flex-row gap-3">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 text-sm hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
+                            Cancel
+                        </button>
+                        <button
+                            onClick={()=>{
+                                const num = Math.max(1, Math.min(7, parseInt(goal) || 1))
+                                onSave(num);
+                                onClose();
+                            }}
+                            className="flex-1 px-4 py-2.5 rounded-xl bg-brand text-white text-sm font-medium hover:bg-brand-light transition-colors shadow-sm shadow-brand/30">
+                            Save Goal
+                        </button>
+                    </div>
+
+                    <div className="border-t border-stone-100 dark:border-stone-800 pt-4 mt-2">
+                        {customExercises.length > 0 ? (
+                            <div>
+                                <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">
+                                    Custom Exercises
+                                </p>
+                                <div className="flex flex-col gap-2">
+                                    {customExercises.map(ex => (
+                                        <div key={ex.id} className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-stone-50 dark:bg-stone-800 border border-stone-100 dark:border-stone-700">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-sm font-medium text-stone-700 dark:text-stone-200">{ex.name}</span>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {ex.muscles.map(m => (
+                                                        <span key={m} className="text-[10px] px-2 py-0.5 rounded-full bg-stone-200 dark:bg-stone-600 text-stone-500 dark:text-stone-300">
+                                                            {m}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => onDeleteExercise(ex.id)}
+                                                className="text-xs text-red-500 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors flex-shrink-0 ml-2"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-xs text-stone-400 text-center py-2">No custom exercises yet</p>
+                        )}
+                    </div>
+                    
                 </div>
 
-
-
-                    {/* Footer */}
-                    <div className="flex flex-col gap-3 px-6 pb-5">
-
-                        <div className="flex flex-row gap-3">
-                            <button
-                                onClick={onClose}
-                                className="flex-1 px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 text-sm hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
-                                Cancel
-                            </button>
-                            <button
-                                onClick={()=>{
-                                    const num = Math.max(1, Math.min(7, parseInt(goal) || 1))
-                                    onSave(num);
-                                    onClose();
-                                }}
-                                className="flex-1 px-4 py-2.5 rounded-xl bg-brand text-white text-sm font-medium hover:bg-brand-light transition-colors shadow-sm shadow-brand/30">
-                                Save Goal
-                            </button>
-                        </div>
-                        <div className="border-t border-stone-100 dark:border-stone-800 pt-4 mt-2">
-                            <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">Danger Zone</p>
-                            <button
-                                onClick={() => { if (window.confirm("Reset all data? This cannot be undone.")) { onReset(); onClose(); } }}
-                                className="w-full px-4 py-2 rounded-xl border border-red-200 dark:border-red-900 text-red-500 text-sm hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
-                            >
-                                Reset all data
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
     );

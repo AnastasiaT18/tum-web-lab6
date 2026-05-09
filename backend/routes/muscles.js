@@ -23,7 +23,12 @@ const auth = require('../middleware/auth');
 
 router.get('/', auth('VISITOR'), (req, res) => {
     const muscles = db.prepare('SELECT * FROM muscles').all();
-    res.json(muscles);
+    res.json({
+        data: muscles.map(m => ({
+            id: m.id,
+            name: m.name
+        }))
+    });
 });
 
 module.exports = router;

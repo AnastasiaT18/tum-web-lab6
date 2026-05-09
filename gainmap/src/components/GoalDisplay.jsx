@@ -1,14 +1,10 @@
-import { IoSettingsOutline } from "react-icons/io5";
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 dayjs.extend(isBetween);
-import { SiTicktick } from "react-icons/si";
 
 
 
-
-
-function GoalDisplay({weeklyGoal = 0, workouts= [], onOpenSettings}) {
+function GoalDisplay({weeklyGoal = 0, workouts= []}) {
 
     function getCompletedDays(){
         let completedDays = 0;
@@ -80,11 +76,6 @@ function GoalDisplay({weeklyGoal = 0, workouts= [], onOpenSettings}) {
                 <h2 className="text-sm font-semibold uppercase tracking-widest text-stone-800 dark:text-stone-500">                    
                     Weekly Goal
                 </h2>
-                <button
-                    onClick={onOpenSettings}
-                    className="p-1.5 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"                    >
-                    <IoSettingsOutline className="w-4 h-4 text-stone-800 dark:text-white" />
-                </button>
             </div>
 
                     <div className="flex items-end gap-1 mb-3">

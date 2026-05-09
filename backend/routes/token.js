@@ -33,8 +33,7 @@ router.post('/token', (req, res) => {
         return res.status(400).json({error: 'Role must be either ADMIN or VISITOR'});
     }
 
-    const token = jwt.sign({role}, process.env.JWT_SECRET, {expiresIn: '1h'});
-    console.log('Generated token:', token);
+    const token = jwt.sign({role}, process.env.JWT_SECRET, {expiresIn: '1m'});
 
     res.json({token});
 

@@ -34,8 +34,8 @@ function WorkoutBodyMap({ side, workout, gender }) {
         const muscleMap = {};
 
         for(let exercise of workout.exercises){
+            const volume = exercise.repsPerSet.reduce((a, b) => a + b, 0);
             for(let muscle of exercise.muscles){
-                const volume = exercise.reps * exercise.sets;
                 muscleMap[muscle] = (muscleMap[muscle] || 0) + volume;
             }
         }
