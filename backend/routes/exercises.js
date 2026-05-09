@@ -61,12 +61,14 @@ router.post('/', auth('ADMIN'), (req,res)=>{
         return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    muscles.forEach(muscleId => {
+    const invalidMuscle = muscles.find(muscleId => {
         const muscleExists = db.prepare('SELECT id FROM muscles WHERE id = ?').get(muscleId);
-        if (!muscleExists) {
-            return res.status(400).json({ message: `Muscle ${muscleId} does not exist` });
-        }
+        return !muscleExists;
     });
+
+    if (invalidMuscle) {
+        return res.status(400).json({ message: `Muscle '${invalidMuscle}' does not exist` });
+    }
 
     const insertExercise = db.prepare('INSERT INTO exercises (id, name) VALUES (?, ?)');
     const insertExerciseMuscle = db.prepare('INSERT INTO exercise_muscles (exercise_id, muscle_id) VALUES (?, ?)');
