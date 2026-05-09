@@ -12,7 +12,6 @@ function WorkoutBodyMap({ side, workout, gender }) {
 
     function musclesToHighlight(workout){
         const muscleMap = getIntensity(workout)
-        console.log(muscleMap);
 
         const max = Math.max(...Object.values(muscleMap), 1);
 
