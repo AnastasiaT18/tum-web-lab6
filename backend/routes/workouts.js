@@ -54,6 +54,33 @@ function getWorkoutbyId(id){
         };
 }
 
+/**
+ * @swagger
+ * /api/workouts:
+ *   get:
+ *     summary: Get all workouts
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *     responses:
+ *       200:
+ *         description: Paginated list of workouts
+ *       401:
+ *         description: No token provided
+ *       403:
+ *         description: Insufficient permissions
+ */
+
 //GET    /api/workouts        → list all (VISITOR or ADMIN), with pagination
 router.get('/', auth('VISITOR'), (req,res) =>{
 
@@ -75,6 +102,29 @@ router.get('/', auth('VISITOR'), (req,res) =>{
 
 })
 
+/**
+ * @swagger
+ * /api/workouts/{id}:
+ *   get:
+ *     summary: Get a workout by ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Workout object
+ *       404:
+ *         description: Workout not found
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Insufficient permissions
+ */
 
 // GET    /api/workouts/:id    → get one (VISITOR or ADMIN)
 router.get('/:id', auth('VISITOR'), (req,res) =>{
@@ -89,6 +139,58 @@ router.get('/:id', auth('VISITOR'), (req,res) =>{
 });
 
 
+/**
+ * @swagger
+ * /api/workouts:
+ *   post:
+ *     summary: Create a new workout
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - id
+ *               - date
+ *               - exercises
+ *             properties:
+ *               id:
+ *                 type: string
+ *                 example: "1777123403805"
+ *               date:
+ *                 type: string
+ *                 example: "2026-04-24T18:30"
+ *               exercises:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - exerciseId
+ *                     - repsPerSet
+ *                   properties:
+ *                     exerciseId:
+ *                       type: string
+ *                       example: "pullups"
+ *                     repsPerSet:
+ *                       type: array
+ *                       items:
+ *                         type: integer
+ *                       example: [10, 10, 8]
+ *     responses:
+ *       201:
+ *         description: Created workout
+ *       400:
+ *         description: Missing or invalid fields
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Insufficient permissions
+ */
+
+
 // POST   /api/workouts        → create (ADMIN only)
 router.post('/', auth('ADMIN'), (req,res) =>{
 
@@ -97,6 +199,12 @@ router.post('/', auth('ADMIN'), (req,res) =>{
     if (!id || !date || !exercises){
         return res.status(400).json({error: 'Missing or invalid fields'})
     }
+
+    const invalidExercise = exercises.find(ex=>
+        !db.prepare('SELECT id FROM exercises WHERE id = ?').get(ex.exerciseId))
+
+    if (invalidExercise) return res.status(400).json({error: `Exercise with id ${invalidExercise.exerciseId} does not exist`});
+
 
     const save = db.transaction(() => {
         db.prepare('INSERT INTO workouts (id, date, liked)   VALUES (?, ?, 0)').run(id, date);
@@ -119,6 +227,29 @@ router.post('/', auth('ADMIN'), (req,res) =>{
     res.status(201).json(getWorkoutbyId(id));
 });
 
+/**
+ * @swagger
+ * /api/workouts/{id}:
+ *   delete:
+ *     summary: Delete a workout
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Deleted successfully
+ *       404:
+ *         description: Workout not found
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Insufficient permissions
+ */
 
 // DELETE /api/workouts/:id    → delete (ADMIN only)
 router.delete('/:id', auth('ADMIN'), (req,res)=>{
@@ -127,6 +258,39 @@ router.delete('/:id', auth('ADMIN'), (req,res)=>{
     res.status(204).send();
 });
 
+
+/**
+ * @swagger
+ * /api/workouts/{id}:
+ *   patch:
+ *     summary: Update liked status
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               liked:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Updated workout
+ *       404:
+ *         description: Workout not found
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Insufficient permissions
+ */
 
 // PATCH  /api/workouts/:id/like → toggle like (ADMIN only)
 router.patch('/:id', auth('ADMIN'), (req,res)=>{
@@ -140,7 +304,7 @@ router.patch('/:id', auth('ADMIN'), (req,res)=>{
         db.prepare('UPDATE workouts SET liked = ? WHERE id = ?').run(req.body.liked ? 1 : 0, req.params.id);
     }
 
-    res.status(200).send();
+    res.json(getWorkoutbyId(req.params.id));
 
 });
 

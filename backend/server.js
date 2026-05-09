@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const db = require('./db');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
 
 const tokenRoute = require('./routes/token');  
 const workoutsRoute = require('./routes/workouts');
@@ -15,6 +17,8 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.use('/api', tokenRoute);
 app.use('/api/workouts', workoutsRoute);
 app.use('/api/exercises', exerciseRoute);
@@ -27,4 +31,5 @@ app.get('/', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Swagger docs at http://localhost:${PORT}/docs`);
 });
