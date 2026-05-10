@@ -123,6 +123,7 @@ const [gender, setGender] = useState(() => {
     }catch (err){
       console.error("Failed to update workout:", err);
       toast.error("Failed to update workout");
+      throw err;
     }
   }
 

@@ -23,8 +23,8 @@ function RecentWorkouts({ workouts = [], muscles, onDelete, toggleLike, onSelect
         }
     }
 
-    const handleLike = (workout) => {
-        toggleLike(workout.id);
+    const handleLike = async (workout) => {
+        await toggleLike(workout.id);
         toast(workout.liked ? "Workout unliked 👎" : "Workout liked ❤️");
     }
 
