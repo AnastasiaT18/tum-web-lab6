@@ -25,7 +25,7 @@ const router = express.Router();
  *         description: Invalid role
  */
 
-router.post('/token', (req, res) => {
+router.post('/token', async (req, res) => {
 
     const {role} = req.body;
 
