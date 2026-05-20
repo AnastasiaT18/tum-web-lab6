@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const pool = require('../db');
 const auth = require('../middleware/auth');
 
 
@@ -18,17 +18,19 @@ const auth = require('../middleware/auth');
  *         description: No token provided
  *       403:
  *         description: Insufficient permissions
+ *       500:
+ *         description: Internal server error
  */
 
 
-router.get('/', auth('VISITOR'), (req, res) => {
-    const muscles = db.prepare('SELECT * FROM muscles').all();
-    res.json({
-        data: muscles.map(m => ({
-            id: m.id,
-            name: m.name
-        }))
-    });
+router.get('/', auth('VISITOR'), async (req, res) => {
+    try{
+        const result = await pool.query('SELECT * FROM muscles');
+        res.json({ data: result.rows});
+    }catch(err){
+        console.error(err);
+        res.status(500).json({error: 'Internal server error'});
+    }
 });
 
 module.exports = router;
