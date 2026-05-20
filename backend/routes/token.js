@@ -25,7 +25,7 @@ const router = express.Router();
  *         description: Invalid role
  */
 
-router.post('/token', (req, res) => {
+router.post('/token', async (req, res) => {
 
     const {role} = req.body;
 
@@ -33,7 +33,7 @@ router.post('/token', (req, res) => {
         return res.status(400).json({error: 'Role must be either ADMIN or VISITOR'});
     }
 
-    const token = jwt.sign({role}, process.env.JWT_SECRET, {expiresIn: '1m'});
+    const token = jwt.sign({role}, process.env.JWT_SECRET, {expiresIn: '1h'});
 
     res.json({token});
 

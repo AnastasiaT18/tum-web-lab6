@@ -1,14 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const pool = require('../db');
 const auth = require('../middleware/auth');
 
 
-function getWorkoutbyId(id){
-    const workout = db.prepare('SELECT * FROM workouts WHERE id = ?').get(id);
+async function getWorkoutbyId(id){
+    const workoutResult = await pool.query('SELECT * FROM workouts WHERE id = $1', [id]);
+    
+    const workout = workoutResult.rows[0];
     if (!workout) return null;
 
-    const rows = db.prepare(`
+    const rowsResult = await pool.query(`
         SELECT 
             we.id as we_id,
             we.exercise_id,
@@ -20,12 +22,14 @@ function getWorkoutbyId(id){
         JOIN exercises e on we.exercise_id = e.id
         JOIN exercise_muscles em ON we.exercise_id = em.exercise_id
         JOIN sets s ON we.id = s.workout_exercise_id
-        WHERE we.workout_id = ?
-        ORDER BY we.id, s.set_number`).all(id);
+        WHERE we.workout_id = $1
+        ORDER BY we.id, s.set_number`, [id]);
 
-        const exerciseMap = {};
-        for (const row of rows) {
-            if (!exerciseMap[row.we_id]) {
+    const rows = rowsResult.rows;
+
+    const exerciseMap = {};
+    for (const row of rows) {
+        if (!exerciseMap[row.we_id]) {
             exerciseMap[row.we_id] = {
                 exerciseId: row.exercise_id,
                 exerciseName: row.exercise_name,
@@ -34,22 +38,22 @@ function getWorkoutbyId(id){
             };
             }
 
-            const ex = exerciseMap[row.we_id];
+        const ex = exerciseMap[row.we_id];
 
-            if (!ex.muscles.includes(row.muscle_id)) {
-                ex.muscles.push(row.muscle_id);
-            }
-
-            let setIndex = row.set_number - 1;
-            if (ex.repsPerSet[setIndex] === undefined){
-                ex.repsPerSet[setIndex] = row.reps;
-            }
+        if (!ex.muscles.includes(row.muscle_id)) {
+            ex.muscles.push(row.muscle_id);
         }
+
+        let setIndex = row.set_number - 1;
+        if (ex.repsPerSet[setIndex] === undefined){
+            ex.repsPerSet[setIndex] = row.reps;
+        }
+    }
 
         return {
             id:workout.id,
             date: workout.date,
-            liked: workout.liked === 1,
+            liked: workout.liked === 1 || workout.liked === true,
             exercises: Object.values(exerciseMap)
         };
 }
@@ -79,28 +83,31 @@ function getWorkoutbyId(id){
  *         description: No token provided
  *       403:
  *         description: Insufficient permissions
+ *       500:
+ *         description: Internal server error
  */
 
 //GET    /api/workouts        → list all (VISITOR or ADMIN), with pagination
-router.get('/', auth('VISITOR'), (req,res) =>{
+router.get('/', auth('VISITOR'), async (req,res) =>{
 
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = parseInt(req.query.offset) || 0;
+    try{
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = parseInt(req.query.offset) || 0;
 
-    const workouts = db.prepare('SELECT * FROM workouts LIMIT ? OFFSET ?').all(limit, offset);
+        const workoutsResult = await pool.query('SELECT * FROM workouts LIMIT $1 OFFSET $2', [limit, offset]);
+    
+        const totalResults = await pool.query('SELECT COUNT(*) as count FROM workouts');
+        const total = parseInt(totalResults.rows[0].count);
 
-    const total = db.prepare('SELECT COUNT(*) as count FROM workouts').get().count;
+        const data = await Promise.all(workoutsResult.rows.map(w => getWorkoutbyId(w.id)));
 
-    res.json({
-        data: workouts.map(w=> getWorkoutbyId(w.id)),
-        total,
-        limit,
-        offset
-    })
+        res.json({data, total, limit, offset})
+    }catch(err){
+        console.error('Error fetching workouts:', err);
+        res.status(500).json({error: 'Internal server error'});
+    }
 
-    //HANDLE ERRORS??
-
-})
+});
 
 /**
  * @swagger
@@ -124,18 +131,27 @@ router.get('/', auth('VISITOR'), (req,res) =>{
  *         description: Unauthorized
  *       403:
  *         description: Insufficient permissions
+ *       500:
+ *         description: Internal server error
  */
 
 // GET    /api/workouts/:id    → get one (VISITOR or ADMIN)
-router.get('/:id', auth('VISITOR'), (req,res) =>{
+router.get('/:id', auth('VISITOR'), async (req,res) =>{
 
-    const workout = getWorkoutbyId(req.params.id);
+    try{
+        const workout = await getWorkoutbyId(req.params.id);
 
-    if (!workout){
-        return res.status(404).json({error: 'Workout not found'})
+        if (!workout){
+            return res.status(404).json({error: 'Workout not found'})
+        }
+
+        res.json(workout);
     }
-
-    res.json(workout);
+    catch(err){
+        console.error('Error fetching workout:', err);
+        res.status(500).json({error: 'Internal server error'});
+    }
+    
 });
 
 
@@ -188,11 +204,13 @@ router.get('/:id', auth('VISITOR'), (req,res) =>{
  *         description: Unauthorized
  *       403:
  *         description: Insufficient permissions
+ *       500:
+ *         description: Internal server error
  */
 
 
 // POST   /api/workouts        → create (ADMIN only)
-router.post('/', auth('ADMIN'), (req,res) =>{
+router.post('/', auth('ADMIN'), async (req,res) =>{
 
     const {id, date, exercises} = req.body;
 
@@ -200,31 +218,45 @@ router.post('/', auth('ADMIN'), (req,res) =>{
         return res.status(400).json({error: 'Missing or invalid fields'})
     }
 
-    const invalidExercise = exercises.find(ex=>
-        !db.prepare('SELECT id FROM exercises WHERE id = ?').get(ex.exerciseId))
+    const client = await pool.connect();
 
-    if (invalidExercise) return res.status(400).json({error: `Exercise with id ${invalidExercise.exerciseId} does not exist`});
+    try{
 
+        await client.query('BEGIN');   
 
-    const save = db.transaction(() => {
-        db.prepare('INSERT INTO workouts (id, date, liked)   VALUES (?, ?, 0)').run(id, date);
+        // Validate exercises
+        for (const ex of exercises){
+            const result = await client.query('SELECT id FROM exercises WHERE id = $1', [ex.exerciseId]);
         
-        const insertWorkoutExercises = db.prepare('INSERT INTO workout_exercises (workout_id, exercise_id) VALUES (?, ?)');
-
-        const insertSet = db.prepare('INSERT INTO sets (workout_exercise_id, set_number, reps) VALUES (?, ?, ?)');
-
-        exercises.forEach(ex => {
-            const {lastInsertRowid} = insertWorkoutExercises.run(id, ex.exerciseId);
-            
-            ex.repsPerSet.forEach((reps, index)=>{
-                insertSet.run(lastInsertRowid, index+1, reps);
+            if (result.rowCount === 0){
+                await client.query('ROLLBACK');
+                return res.status(400).json({error: `Exercise with id ${ex.exerciseId} does not exist`});
             }
-        );
-        });
-    });
-    
-    save();
-    res.status(201).json(getWorkoutbyId(id));
+        }
+
+        await client.query('INSERT INTO workouts (id, date, liked) VALUES ($1, $2, 0)', [id, date]);
+
+        for (const ex of exercises){
+            const weResult = await client.query('INSERT INTO workout_exercises (workout_id, exercise_id) VALUES ($1, $2) RETURNING id', [id, ex.exerciseId]);
+            const workoutExerciseId = weResult.rows[0].id;
+
+            for (let i = 0; i < ex.repsPerSet.length; i++){
+                await client.query('INSERT INTO sets (workout_exercise_id, set_number, reps) VALUES ($1, $2, $3)', [workoutExerciseId, i + 1, ex.repsPerSet[i]]);
+            }
+        }
+
+        await client.query('COMMIT');
+
+        const saved = await getWorkoutbyId(id);
+        res.status(201).json(saved);
+
+    }catch(err){
+        await client.query('ROLLBACK');
+        console.error('Error creating workout:', err);
+        res.status(500).json({error: 'Internal server error'});  
+    }finally{
+        client.release();
+    }
 });
 
 /**
@@ -249,13 +281,20 @@ router.post('/', auth('ADMIN'), (req,res) =>{
  *         description: Unauthorized
  *       403:
  *         description: Insufficient permissions
+ *       500:
+ *         description: Internal server error
  */
 
 // DELETE /api/workouts/:id    → delete (ADMIN only)
-router.delete('/:id', auth('ADMIN'), (req,res)=>{
-    const result = db.prepare('DELETE FROM workouts WHERE id = ?').run(req.params.id);
-    if (result.changes === 0) return res.status(404).json({ error: 'Workout not found' });
-    res.status(204).send();
+router.delete('/:id', auth('ADMIN'), async (req,res)=>{
+    try{
+        const result = await pool.query('DELETE FROM workouts WHERE id = $1', [req.params.id]);
+        if (result.rowCount === 0) return res.status(404).json({ error: 'Workout not found' });
+        res.status(204).send();
+    }catch(err){
+        console.error('Error deleting workout:', err);
+        res.status(500).json({error: 'Internal server error'});  
+    }
 });
 
 
@@ -290,21 +329,31 @@ router.delete('/:id', auth('ADMIN'), (req,res)=>{
  *         description: Unauthorized
  *       403:
  *         description: Insufficient permissions
+ *       500:
+ *         description: Internal server error
  */
 
 // PATCH  /api/workouts/:id/like → toggle like (ADMIN only)
-router.patch('/:id', auth('ADMIN'), (req,res)=>{
-    const workout = getWorkoutbyId(req.params.id);
+router.patch('/:id', auth('ADMIN'), async (req,res)=>{
 
-    if (!workout){
-        return res.status(404).json({error: 'Workout not found'})
+    try{
+        const workout = await getWorkoutbyId(req.params.id);
+
+        if (!workout){
+            return res.status(404).json({error: 'Workout not found'})
+        }
+
+        if(req.body.liked !== undefined){
+            await pool.query('UPDATE workouts SET liked = $1 WHERE id = $2', [req.body.liked ? 1 : 0, req.params.id]);
+        }
+
+        const updated = await getWorkoutbyId(req.params.id);
+        res.json(updated);
+
+    }catch(err){
+        console.error('Error updating workout:', err);
+        res.status(500).json({error: 'Internal server error'});
     }
-
-    if(req.body.liked !== undefined){
-        db.prepare('UPDATE workouts SET liked = ? WHERE id = ?').run(req.body.liked ? 1 : 0, req.params.id);
-    }
-
-    res.json(getWorkoutbyId(req.params.id));
 
 });
 
