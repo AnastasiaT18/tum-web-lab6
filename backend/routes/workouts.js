@@ -53,7 +53,8 @@ async function getWorkoutbyId(id){
         return {
             id:workout.id,
             date: workout.date,
-            liked: workout.liked === 1 || workout.liked === true,
+            liked: workout.liked,
+            userId: workout.user_id,
             exercises: Object.values(exerciseMap)
         };
 }
@@ -81,22 +82,20 @@ async function getWorkoutbyId(id){
  *         description: Paginated list of workouts
  *       401:
  *         description: No token provided
- *       403:
- *         description: Insufficient permissions
  *       500:
  *         description: Internal server error
  */
 
 //GET    /api/workouts        → list all (VISITOR or ADMIN), with pagination
-router.get('/', auth('VISITOR'), async (req,res) =>{
+router.get('/', auth(), async (req,res) =>{
 
     try{
         const limit = parseInt(req.query.limit) || 10;
         const offset = parseInt(req.query.offset) || 0;
 
-        const workoutsResult = await pool.query('SELECT * FROM workouts LIMIT $1 OFFSET $2', [limit, offset]);
+        const workoutsResult = await pool.query('SELECT * FROM workouts WHERE user_id = $1 LIMIT $2 OFFSET $3', [req.user.userId, limit, offset]);
     
-        const totalResults = await pool.query('SELECT COUNT(*) as count FROM workouts');
+        const totalResults = await pool.query('SELECT COUNT(*) as count FROM workouts WHERE user_id = $1', [req.user.userId]);
         const total = parseInt(totalResults.rows[0].count);
 
         const data = await Promise.all(workoutsResult.rows.map(w => getWorkoutbyId(w.id)));
@@ -136,13 +135,17 @@ router.get('/', auth('VISITOR'), async (req,res) =>{
  */
 
 // GET    /api/workouts/:id    → get one (VISITOR or ADMIN)
-router.get('/:id', auth('VISITOR'), async (req,res) =>{
+router.get('/:id', auth(), async (req,res) =>{
 
     try{
         const workout = await getWorkoutbyId(req.params.id);
 
         if (!workout){
             return res.status(404).json({error: 'Workout not found'})
+        }
+
+        if (workout.userId !== req.user.userId){
+            return res.status(403).json({error: 'Insufficient permissions'})
         }
 
         res.json(workout);
@@ -202,15 +205,13 @@ router.get('/:id', auth('VISITOR'), async (req,res) =>{
  *         description: Missing or invalid fields
  *       401:
  *         description: Unauthorized
- *       403:
- *         description: Insufficient permissions
  *       500:
  *         description: Internal server error
  */
 
 
 // POST   /api/workouts        → create (ADMIN only)
-router.post('/', auth('ADMIN'), async (req,res) =>{
+router.post('/', auth(), async (req,res) =>{
 
     const {id, date, exercises} = req.body;
 
@@ -234,7 +235,7 @@ router.post('/', auth('ADMIN'), async (req,res) =>{
             }
         }
 
-        await client.query('INSERT INTO workouts (id, date, liked) VALUES ($1, $2, 0)', [id, date]);
+        await client.query('INSERT INTO workouts (id, date, liked, user_id) VALUES ($1, $2, 0, $3)', [id, date, req.user.userId]);
 
         for (const ex of exercises){
             const weResult = await client.query('INSERT INTO workout_exercises (workout_id, exercise_id) VALUES ($1, $2) RETURNING id', [id, ex.exerciseId]);
@@ -286,10 +287,19 @@ router.post('/', auth('ADMIN'), async (req,res) =>{
  */
 
 // DELETE /api/workouts/:id    → delete (ADMIN only)
-router.delete('/:id', auth('ADMIN'), async (req,res)=>{
+router.delete('/:id', auth(), async (req,res)=>{
     try{
-        const result = await pool.query('DELETE FROM workouts WHERE id = $1', [req.params.id]);
-        if (result.rowCount === 0) return res.status(404).json({ error: 'Workout not found' });
+        const check = await pool.query('SELECT user_id FROM workouts WHERE id = $1', [req.params.id]);
+
+        if (check.rowCount === 0){
+            return res.status(404).json({error: 'Workout not found'})
+        }
+
+        if (check.rows[0].user_id !== req.user.userId){
+            return res.status(403).json({error: 'Insufficient permissions'})
+        }
+
+        await pool.query('DELETE FROM workouts WHERE id = $1', [req.params.id]);
         res.status(204).send();
     }catch(err){
         console.error('Error deleting workout:', err);
@@ -334,17 +344,21 @@ router.delete('/:id', auth('ADMIN'), async (req,res)=>{
  */
 
 // PATCH  /api/workouts/:id/like → toggle like (ADMIN only)
-router.patch('/:id', auth('ADMIN'), async (req,res)=>{
+router.patch('/:id', auth(), async (req,res)=>{
 
     try{
-        const workout = await getWorkoutbyId(req.params.id);
+        const check = await pool.query('SELECT user_id FROM workouts WHERE id = $1', [req.params.id]);
 
-        if (!workout){
+        if (check.rowCount === 0){
             return res.status(404).json({error: 'Workout not found'})
         }
 
+        if (check.rows[0].user_id !== req.user.userId){
+            return res.status(403).json({error: 'Insufficient permissions'})
+        }
+
         if(req.body.liked !== undefined){
-            await pool.query('UPDATE workouts SET liked = $1 WHERE id = $2', [req.body.liked ? 1 : 0, req.params.id]);
+            await pool.query('UPDATE workouts SET liked = $1 WHERE id = $2', [req.body.liked, req.params.id]);
         }
 
         const updated = await getWorkoutbyId(req.params.id);

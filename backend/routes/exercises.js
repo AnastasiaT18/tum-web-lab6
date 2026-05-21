@@ -27,33 +27,33 @@ const auth = require('../middleware/auth');
  *         description: Paginated list of workouts
  *       401:
  *         description: No token provided
- *       403:
- *         description: Insufficient permissions
  *       500:
  *         description: Internal server error
  */
 
 
 // GET /api/exercises → list all exercises
-router.get('/', auth('VISITOR'), async (req, res) => {
+router.get('/', auth(), async (req, res) => {
 
     try{
         const limit = parseInt(req.query.limit) || 50;
         const offset = parseInt(req.query.offset) || 0;
 
         const result = await pool.query(`
-            SELECT e.id, e.name, STRING_AGG(em.muscle_id, ',') as muscles
+            SELECT e.id, e.name, STRING_AGG(em.muscle_id, ',') as muscles, e.user_id
             FROM exercises e
             LEFT JOIN exercise_muscles em ON e.id = em.exercise_id
+            WHERE e.user_id IS NULL OR e.user_id = $1
             GROUP BY e.id
-            LIMIT $1 OFFSET $2`, [limit, offset]);
+            LIMIT $2 OFFSET $3`, [req.user.userId, limit, offset]);
 
-        const totalResult = await pool.query('SELECT COUNT(*) as count FROM exercises');
+        const totalResult = await pool.query('SELECT COUNT(*) as count FROM exercises WHERE user_id IS NULL OR user_id = $1', [req.user.userId]);
         const total = parseInt(totalResult.rows[0].count);
 
         const data = result.rows.map(ex => ({
             ...ex,
-            muscles: ex.muscles ? ex.muscles.split(',') : []
+            muscles: ex.muscles ? ex.muscles.split(',') : [],
+            isCustom: ex.user_id !== null
         }));
 
         res.json({data, total, limit, offset });
@@ -84,23 +84,21 @@ router.get('/', auth('VISITOR'), async (req, res) => {
  *         description: Exercise not found
  *       401:
  *         description: Unauthorized
- *       403:
- *         description: Insufficient permissions
  *       500:
  *         description: Internal server error
  */
 
 
 // GET /api/exercises/:id → list ONE exercise
-router.get('/:id', auth('VISITOR'), async (req, res) => {
+router.get('/:id', auth(), async (req, res) => {
     
     try{
         const result = await pool.query(`
-            SELECT e.id, e.name, STRING_AGG(em.muscle_id, ',') as muscles
+            SELECT e.id, e.name, STRING_AGG(em.muscle_id, ',') as muscles, e.user_id
             FROM exercises e
             LEFT JOIN exercise_muscles em ON e.id = em.exercise_id
-            WHERE e.id = $1
-            GROUP BY e.id`, [req.params.id]);
+            WHERE e.id = $1 AND (e.user_id IS NULL OR e.user_id = $2)
+            GROUP BY e.id`, [req.params.id, req.user.userId]);
 
         const exercise = result.rows[0];
         if (!exercise || !exercise.id) {
@@ -109,7 +107,8 @@ router.get('/:id', auth('VISITOR'), async (req, res) => {
 
         res.json({
             ...exercise,
-            muscles: exercise.muscles ? exercise.muscles.split(',') : []
+            muscles: exercise.muscles ? exercise.muscles.split(',') : [],
+            isCustom: exercise.user_id !== null
         });
     }
     catch(err){
@@ -156,8 +155,6 @@ router.get('/:id', auth('VISITOR'), async (req, res) => {
  *         description: Missing or invalid fields
  *       401:
  *         description: Unauthorized
- *       403:
- *         description: Insufficient permissions
  *       409:
  *         description: Exercise with given ID or name already exists
  *       500:
@@ -166,7 +163,7 @@ router.get('/:id', auth('VISITOR'), async (req, res) => {
 
 
 // POST /api/exercises — create custom exercise (ADMIN only)
-router.post('/', auth('ADMIN'), async (req,res)=>{
+router.post('/', auth(), async (req,res)=>{
 
     const {id, name, muscles} = req.body;
 
@@ -197,7 +194,7 @@ router.post('/', auth('ADMIN'), async (req,res)=>{
             }
         }
 
-        await client.query('INSERT INTO exercises (id, name) VALUES ($1, $2)', [id, name]);
+        await client.query('INSERT INTO exercises (id, name, user_id) VALUES ($1, $2, $3)', [id, name, req.user.userId]);
 
         for (const m of muscles) {
             await client.query('INSERT INTO exercise_muscles (exercise_id, muscle_id) VALUES ($1, $2)', [id, m]);
@@ -243,10 +240,21 @@ router.post('/', auth('ADMIN'), async (req,res)=>{
  */
 
 //DELETE
-router.delete('/:id', auth('ADMIN'), async (req,res)=>{
+router.delete('/:id', auth(), async (req,res)=>{
     try{
-        const result = await pool.query('DELETE FROM exercises WHERE id = $1', [req.params.id]);
-        if (result.rowCount === 0) return res.status(404).json({ error: 'Exercise not found' });
+        const check = await pool.query('SELECT user_id FROM exercises WHERE id = $1', [req.params.id]);
+
+        if (check.rows.length === 0) return res.status(404).json({ error: 'Exercise not found' });
+        
+        if (check.rows[0].user_id === null)
+            return res.status(403).json({ error: 'Cannot delete built-in exercises' });
+
+        if (check.rows[0].user_id !== req.user.userId) {
+            return res.status(403).json({ error: 'You can only delete your own custom exercises' });
+        }
+
+        await pool.query('DELETE FROM exercises WHERE id = $1', [req.params.id]);
+        
         res.status(204).send();
     }catch(err){
         console.error(err);
