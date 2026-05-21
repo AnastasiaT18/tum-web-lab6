@@ -53,7 +53,7 @@ async function getWorkoutbyId(id){
         return {
             id:workout.id,
             date: workout.date,
-            liked: workout.liked === 1 || workout.liked === true,
+            liked: workout.liked,
             userId: workout.user_id,
             exercises: Object.values(exerciseMap)
         };
@@ -82,14 +82,12 @@ async function getWorkoutbyId(id){
  *         description: Paginated list of workouts
  *       401:
  *         description: No token provided
- *       403:
- *         description: Insufficient permissions
  *       500:
  *         description: Internal server error
  */
 
 //GET    /api/workouts        → list all (VISITOR or ADMIN), with pagination
-router.get('/', auth('VISITOR'), async (req,res) =>{
+router.get('/', auth(), async (req,res) =>{
 
     try{
         const limit = parseInt(req.query.limit) || 10;
@@ -137,7 +135,7 @@ router.get('/', auth('VISITOR'), async (req,res) =>{
  */
 
 // GET    /api/workouts/:id    → get one (VISITOR or ADMIN)
-router.get('/:id', auth('VISITOR'), async (req,res) =>{
+router.get('/:id', auth(), async (req,res) =>{
 
     try{
         const workout = await getWorkoutbyId(req.params.id);
@@ -207,15 +205,13 @@ router.get('/:id', auth('VISITOR'), async (req,res) =>{
  *         description: Missing or invalid fields
  *       401:
  *         description: Unauthorized
- *       403:
- *         description: Insufficient permissions
  *       500:
  *         description: Internal server error
  */
 
 
 // POST   /api/workouts        → create (ADMIN only)
-router.post('/', auth('ADMIN'), async (req,res) =>{
+router.post('/', auth(), async (req,res) =>{
 
     const {id, date, exercises} = req.body;
 
@@ -291,7 +287,7 @@ router.post('/', auth('ADMIN'), async (req,res) =>{
  */
 
 // DELETE /api/workouts/:id    → delete (ADMIN only)
-router.delete('/:id', auth('ADMIN'), async (req,res)=>{
+router.delete('/:id', auth(), async (req,res)=>{
     try{
         const check = await pool.query('SELECT user_id FROM workouts WHERE id = $1', [req.params.id]);
 
@@ -348,7 +344,7 @@ router.delete('/:id', auth('ADMIN'), async (req,res)=>{
  */
 
 // PATCH  /api/workouts/:id/like → toggle like (ADMIN only)
-router.patch('/:id', auth('ADMIN'), async (req,res)=>{
+router.patch('/:id', auth(), async (req,res)=>{
 
     try{
         const check = await pool.query('SELECT user_id FROM workouts WHERE id = $1', [req.params.id]);
@@ -362,7 +358,7 @@ router.patch('/:id', auth('ADMIN'), async (req,res)=>{
         }
 
         if(req.body.liked !== undefined){
-            await pool.query('UPDATE workouts SET liked = $1 WHERE id = $2', [req.body.liked ? 1 : 0, req.params.id]);
+            await pool.query('UPDATE workouts SET liked = $1 WHERE id = $2', [req.body.liked, req.params.id]);
         }
 
         const updated = await getWorkoutbyId(req.params.id);
