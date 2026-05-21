@@ -13,8 +13,8 @@ exports.up = (pgm) => {
     pgm.createTable('users', {
         id: { type: 'serial', primaryKey: true },
         email: {type: 'text', notNull: true, unique: true},
-        passwordHash: { type: 'text', notNull: true },
-        createdAt: { type: 'timestamp', default: pgm.func('NOW()') }
+        password_hash: { type: 'text', notNull: true },
+        created_at: { type: 'timestamp', default: pgm.func('NOW()') }
     });
 
     //add users_id column to workouts table
