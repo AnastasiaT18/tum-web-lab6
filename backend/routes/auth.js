@@ -7,12 +7,38 @@ const auth = require('../middleware/auth');
 
 
 const SALT_ROUNDS = 10;
+const ACCESS_TOKEN_EXPIRY = '15m';
+const REFRESH_TOKEN_EXPIRY = '7d';
+
+function generateTokens(userId, email){
+    const accessToken = jwt.sign(
+        {userId, email}, 
+        process.env.JWT_SECRET, 
+        {expiresIn: ACCESS_TOKEN_EXPIRY});
+
+    const refreshToken = jwt.sign(
+        {userId, email}, 
+        process.env.REFRESH_TOKEN_SECRET, 
+        {expiresIn: REFRESH_TOKEN_EXPIRY});
+    
+    return { accessToken, refreshToken };
+}
+
+function setRefreshTokenCookie(res, refreshToken){
+    res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,      // JS cannot read this
+        secure: true,        // only sent over HTTPS
+        sameSite: 'none',    // needed for cross-origin (GitHub Pages → Railway)
+        maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days in milliseconds
+    });
+}
 
 /**
  * @swagger
  * /api/auth/register:
  *   post:
  *     summary: Register a new user
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -31,16 +57,17 @@ const SALT_ROUNDS = 10;
  *                 example: "password123"
  *     responses:
  *       201:
- *         description: User created, returns JWT
+ *         description: User created — returns access token and user info. Sets httpOnly refresh token cookie.
  *       400:
- *         description: Missing fields
+ *         description: Missing fields password too short (min 6 characters)
  *       409:
  *         description: Email already exists
  *       500:
  *         description: Internal server error
  */
 router.post('/register', async (req, res) => {
-    const {email, password} = req.body;
+    console.log('body:', req.body); 
+    const {email, password} = req.body || {};
 
     if (!email || !password) {
         return res.status(400).json({ error: 'Email and password are required' });
@@ -61,11 +88,12 @@ router.post('/register', async (req, res) => {
         const result = await pool.query('INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, created_at', [email, hashedPassword]);
         const user = result.rows[0];
 
-        const token = jwt.sign(
-            {userId: user.id, email: user.email}, 
-            process.env.JWT_SECRET, {expiresIn: '7d'});
-        
-        res.status(201).json({ token, user: { id: user.id, email: user.email, createdAt: user.created_at } });
+        const { accessToken, refreshToken } = generateTokens(user.id, user.email);
+
+        setRefreshTokenCookie(res, refreshToken);
+
+        res.status(201).json(
+            { accessToken, user: { id: user.id, email: user.email, createdAt: user.created_at } });
     
     }catch(err){
         console.error('Error registering user:', err);
@@ -74,13 +102,12 @@ router.post('/register', async (req, res) => {
 
 });
 
-
-
 /**
  * @swagger
  * /api/auth/login:
  *   post:
  *     summary: Log in a user and return a JWT token
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -99,7 +126,7 @@ router.post('/register', async (req, res) => {
  *                 example: "password123"
  *     responses:
  *       200:
- *         description: Successful login, returns JWT token and user info
+ *         description: Login successful — returns access token and user info. Sets httpOnly refresh token cookie.
  *       400:
  *         description: Missing fields
  *       401:
@@ -109,7 +136,7 @@ router.post('/register', async (req, res) => {
  */
 router.post('/login', async (req, res) => { 
 
-    const {email, password} = req.body;
+    const {email, password} = req.body || {};
 
     if (!email || !password) {
         return res.status(400).json({ error: 'Email and password are required' });
@@ -119,6 +146,7 @@ router.post('/login', async (req, res) => {
         const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
 
         const user = result.rows[0];
+        
 
         if (!user) {
             return res.status(401).json({ error: 'Invalid email or password' });
@@ -130,11 +158,11 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 
-        const token = jwt.sign(
-            {userId: user.id, email: user.email}, 
-            process.env.JWT_SECRET, {expiresIn: '7d'});
+        const { accessToken, refreshToken } = generateTokens(user.id, user.email);
 
-        res.json({ token, user: { id: user.id, email: user.email} });
+        setRefreshTokenCookie(res, refreshToken);
+
+        res.json({ accessToken, user: { id: user.id, email: user.email} });
     }catch(err){
         console.error('Error logging in user:', err);
         res.status(500).json({ error: 'Internal server error' });
@@ -142,12 +170,12 @@ router.post('/login', async (req, res) => {
 
 });
 
-
 /**
  * @swagger
  * /api/auth/me:
  *   get:
  *     summary: Get current logged in user info
+ *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -175,6 +203,70 @@ router.get('/me', auth(), async (req,res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 })
+
+
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Get a new access token using the refresh token cookie
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Returns new access token. Rotates refresh token cookie.
+ *       401:
+ *         description: No refresh token cookie, or token is invalid/expired
+ *       404:
+ *         description: User no longer exists
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/refresh', async (req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+        return res.status(401).json({ error: 'No refresh token provided' });
+    }
+
+    try{
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+        const result = await pool.query('SELECT id, email FROM users WHERE id = $1', [decoded.userId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const user = result.rows[0];
+        const { accessToken, refreshToken: newRefreshToken } = generateTokens(user.id, user.email);
+
+        //rotate refresh token - invalidate old one by setting new cookie
+        setRefreshTokenCookie(res, newRefreshToken);
+        res.json({ accessToken });
+    }catch(err){
+        console.error('Error refreshing token:', err);
+        res.status(401).json({ error: 'Invalid or expired refresh token' });
+    }
+})
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Log out — clears the refresh token cookie
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ */
+router.post('/logout', (req, res) => {
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none'
+    });
+    res.json({ message: 'Logged out successfully' });
+});
 
 
 
