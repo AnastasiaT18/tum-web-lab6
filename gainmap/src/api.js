@@ -6,30 +6,33 @@ async function getToken() {
 
     if (token) return token;
 
-    const res = await fetch(`${BASE_URL}/token`, {
+    const res = await fetch(`${BASE_URL}/auth/refresh`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ role: 'ADMIN' })
-    });
+        credentials: 'include' // Important for sending cookies
+        });
+
+    if (!res.ok) return null;
 
     const data = await res.json();
-    token = data.token;
+    token = data.accessToken;
     return token;
 }
 
 async function authFetch(path, options = {}) {
-    const token = await getToken();
+    const currentToken = await getToken();
     
     const res = await fetch(`${BASE_URL}${path}`, {
         ...options,
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${currentToken}`,
             ...options.headers
     }
 });
+
     if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || errorData.message || `Request failed: ${res.status}`);
@@ -70,6 +73,35 @@ async function authFetch(path, options = {}) {
 
     //Muscles
     getMuscles: () => authFetch('/muscles'),
+
+    //Auth - no token needed
+    register: (email, password) => fetch(`${BASE_URL}/auth/register`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({email, password}),
+    }).then(res => res.json()),
+
+
+    login: (email, password) => fetch(`${BASE_URL}/auth/login`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({email, password}),
+    }).then(res => res.json()),
+
+
+    logout: () => fetch(`${BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then(res => res.json())
 
 
  }
