@@ -119,6 +119,10 @@ async function authFetch(path, options = {}) {
             body: JSON.stringify({email, password}),
         });
 
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || errorData.message || `Registration failed: ${res.status}`);
+        }
         const data = await res.json();
         accessToken = data.accessToken; // Store the access token for future requests
         return data;
@@ -135,7 +139,10 @@ async function authFetch(path, options = {}) {
             },
             body: JSON.stringify({email, password}),
         });
-
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || errorData.message || `Login failed: ${res.status}`);
+        }
         const data = await res.json();
         accessToken = data.accessToken; // Store the access token for future requests
         return data;

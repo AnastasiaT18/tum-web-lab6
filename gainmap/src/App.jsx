@@ -185,6 +185,7 @@ function App() {
     }
   }
 
+  
 
   const toaster = (
     <Toaster
@@ -226,7 +227,7 @@ function App() {
     <>
     {toaster}
     <div className="font-sans min-h-screen bg-stone-50 dark:bg-stone-950 transition-colors duration-300">
-      <Navbar darkMode={darkMode} setDarkMode={setDarkMode} onOpenSettings={()=>setIsGoalModalOpen(true)} />
+      <Navbar darkMode={darkMode} setDarkMode={setDarkMode} onOpenSettings={()=>setIsGoalModalOpen(true)} onLogout={handleLogout} />
       <main className="max-w-full mx-auto px-4 sm:px-6 pb-8 grid lg:grid-cols-2 gap-4 sm:gap-6">
 
         {/* Left - body map */} 

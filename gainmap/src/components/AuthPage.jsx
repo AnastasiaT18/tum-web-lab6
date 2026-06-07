@@ -1,7 +1,6 @@
 import {api} from "../api";
 import { useState } from "react";
-import { toast } from "react-hot-toast";
-
+import toast from "react-hot-toast";  // ← default import
 
 
 function AuthPage({onAuthSuccess}) {
@@ -25,14 +24,12 @@ function AuthPage({onAuthSuccess}) {
             onAuthSuccess();
         }catch(err){
             console.error('Authentication error:', err);
-            toast.error('Failed to authenticate. Please check your credentials and try again.');
+            toast.error(err.message || 'An error occurred during authentication');
         }finally{
             setLoading(false);
         }
         
     }
-
-    console.log(loading);
 
     return (
         <div className="font-sans min-h-screen bg-stone-50 dark:bg-stone-950 transition-colors duration-300 flex flex-col items-center justify-center">
