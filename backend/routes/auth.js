@@ -66,7 +66,8 @@ function setRefreshTokenCookie(res, refreshToken){
  *         description: Internal server error
  */
 router.post('/register', async (req, res) => {
-    const {email, password} = req.body;
+    console.log('body:', req.body); 
+    const {email, password} = req.body || {};
 
     if (!email || !password) {
         return res.status(400).json({ error: 'Email and password are required' });
@@ -135,7 +136,7 @@ router.post('/register', async (req, res) => {
  */
 router.post('/login', async (req, res) => { 
 
-    const {email, password} = req.body;
+    const {email, password} = req.body || {};
 
     if (!email || !password) {
         return res.status(400).json({ error: 'Email and password are required' });

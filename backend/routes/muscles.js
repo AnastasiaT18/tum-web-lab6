@@ -23,7 +23,7 @@ const auth = require('../middleware/auth');
  */
 
 
-router.get('/', auth('VISITOR'), async (req, res) => {
+router.get('/', auth(), async (req, res) => {
     try{
         const result = await pool.query('SELECT * FROM muscles');
         res.json({ data: result.rows});
