@@ -1,42 +1,51 @@
 # GainMap — Fitness Tracker
 
-GainMap is a full-stack web app for tracking bodyweight workouts, built with React on the frontend and Node.js + Express on the backend, with a SQLite database.
+A full-stack fitness tracking web app built with React and Node.js. Log bodyweight workouts, visualize trained muscles on an interactive body map, track weekly goals, and access your data from any device. Installable as a PWA on iPhone and Android.
 
-It lets you log workouts with exercises and per-set rep counts, see which muscles you've trained recently or how intensely they were trained on an interactive anatomical body map, track a weekly workout goal, and browse your history through a calendar heatmap.
-
-**Live app:** https://anastasiat18.github.io/tum-web-lab6/
-
-> **Note:** The live app requires the backend to be running locally. See [Running locally](#running-locally) below.
+**Live app:** https://anastasiat18.github.io/tum-web-lab6  
+**API:** https://tum-web-lab6-production.up.railway.app  
+**API Docs:** https://tum-web-lab6-production.up.railway.app/docs  
+**Repo:** https://github.com/AnastasiaT18/tum-web-lab6
 
 ---
 
 ## Features
 
 ### Workouts (main entity)
-- **Add** — pick date/time, select exercises, configure sets and per-set reps
-- **Delete** — trash icon with confirmation dialog
+- **Add** — pick date/time, select exercises, configure sets with per-set rep counts
+- **Delete** — with confirmation prompt
 - **Like / Unlike** — heart toggle per workout
 - **Filter** — by All, Liked, or any muscle group
-- **View details** — click any workout to open a detail modal with a per-workout body map
-- **Templates** — reuse a past workout's exercise selection when adding a new one
+- **View details** — full detail modal with per-workout body map showing muscle intensity
+- **Templates** — reuse a past workout's exercise selection
 
 ### Per-set rep configuration
-Each exercise stores reps as an array (`repsPerSet: [12, 10, 8]`), so every set can have a different rep count. The UI has `+` / `−` buttons to add or remove sets and a "Fill all" shortcut to apply the same value to every set at once.
+Each exercise stores reps as an array (`repsPerSet: [12, 10, 8]`), so every set can have a different rep count. The UI has `+` / `−` buttons to add or remove sets and a "Fill all" shortcut.
 
 ### Interactive body map
-Muscles are colour-coded by how recently they were trained (≤1 day → red, 1–3 days → orange, 3–7 days → yellow, >7 days → grey). Click a muscle to see the last training date. Toggle between Female/Male models and Front/Back views.
+Front and back anatomical views with muscles colour-coded by how recently they were trained — ≤1 day (red), 1–3 days (orange), 3–7 days (yellow), >7 days (grey). Click any muscle to see the last training date.
 
-### Weekly goal
-Set a target of 1–7 workout days per week. Progress bar fills and turns green when the goal is hit.
+### Weekly goal & streak
+Set a target of 1–7 workout days per week. Progress bar fills and turns green when the goal is hit. A 🔥 streak counter tracks consecutive weeks where the goal was reached.
 
 ### Activity calendar
-Monthly heatmap — green for workout days, grey for rest. Current day is highlighted. Navigate back through past months.
+Monthly heatmap — green for workout days, grey for rest. Navigate back through past months.
 
 ### Custom exercises
-Define exercises with a custom name and any combination of muscle groups. Saved to the database and available alongside built-in exercises. Manage and delete custom exercises from the settings panel.
+Define exercises with a custom name and any combination of muscle groups. Stored per user in the database.
 
-### Light / Dark mode
-Toggle via the navbar. Applied by adding/removing the `.dark` class on `<html>`, activating Tailwind's `dark:` variant across all components.
+### Authentication
+- Register and login with email and password
+- Passwords hashed with bcrypt (never stored plain)
+- JWT access token (15min) + httpOnly refresh token cookie (7 days)
+- Token rotation on every refresh
+- Each user only sees their own data
+
+### Dark mode
+Toggle via navbar. Persisted to localStorage.
+
+### PWA — installable on iPhone
+Add to home screen from Safari. Opens without browser bar, feels native.
 
 ---
 
@@ -51,16 +60,18 @@ Toggle via the navbar. Applied by adding/removing the `.dark` class on `<html>`,
 | dayjs | Date formatting and diffs |
 | react-hot-toast | Toast notifications |
 | react-tooltip | Hover tooltips |
+| vite-plugin-pwa | PWA / installable app support |
 
 ### Backend
 | | |
 |---|---|
-| Node.js + Express | REST API server |
-| better-sqlite3 | SQLite database |
-| jsonwebtoken | JWT authentication |
+| Node.js + Express | REST API |
+| PostgreSQL (Supabase) | Database |
+| bcrypt | Password hashing |
+| jsonwebtoken | JWT access + refresh tokens |
+| cookie-parser | httpOnly refresh token cookie |
 | swagger-ui-express | API documentation |
-| dotenv | Environment variables |
-| cors | Cross-origin requests |
+| Railway | Backend hosting |
 
 ---
 
@@ -68,36 +79,41 @@ Toggle via the navbar. Applied by adding/removing the `.dark` class on `<html>`,
 
 ```
 tum-web-lab6/
-├── gainmap/                  # Frontend (React + Vite)
-│   └── src/
-│       ├── App.jsx           # Root — state, API calls, layout
-│       ├── api.js            # API service layer (all fetch calls)
-│       ├── index.css         # Tailwind v4 + custom theme
-│       └── components/
-│           ├── Navbar.jsx
-│           ├── BodyMap.jsx           # Interactive muscle map
-│           ├── GoalDisplay.jsx       # Weekly progress bar
-│           ├── ActivityCalendar.jsx  # Monthly heatmap
-│           ├── RecentWorkouts.jsx    # Workout list with like/delete/filter
-│           ├── AddWorkoutModal.jsx   # Add workout + per-set reps
-│           ├── WorkoutModal.jsx      # Workout detail + muscle map
-│           ├── WorkoutBodyMap.jsx    # Body map for a single workout
-│           ├── GoalSettingsModal.jsx
-│           └── CustomExerciseForm.jsx
+├── gainmap/                    # React frontend
+│   ├── public/
+│   │   ├── icons/              # PWA icons (192x192, 512x512)
+│   │   └── favicon.svg
+│   ├── src/
+│   │   ├── api.js              # All API calls in one place
+│   │   ├── App.jsx             # Root — state, auth flow, layout
+│   │   ├── index.css           # Tailwind v4 + custom theme
+│   │   └── components/
+│   │       ├── Navbar.jsx
+│   │       ├── AuthPage.jsx        # Login / register UI
+│   │       ├── BodyMap.jsx         # Interactive muscle map
+│   │       ├── GoalDisplay.jsx     # Weekly progress + streak
+│   │       ├── ActivityCalendar.jsx
+│   │       ├── RecentWorkouts.jsx
+│   │       ├── AddWorkoutModal.jsx # Per-set reps UI
+│   │       ├── WorkoutModal.jsx
+│   │       ├── WorkoutBodyMap.jsx
+│   │       ├── GoalSettingsModal.jsx
+│   │       └── CustomExerciseForm.jsx
+│   └── vite.config.js
 │
-└── backend/                  # Backend (Node.js + Express)
-    ├── server.js             # Entry point
-    ├── db.js                 # SQLite setup and schema
-    ├── seed.js               # Seeds built-in exercises and muscles
-    ├── import.js             # One-time import from exported JSON
-    ├── swagger.js            # Swagger configuration
+└── backend/                    # Express API
+    ├── routes/
+    │   ├── auth.js             # register, login, refresh, logout, /me
+    │   ├── workouts.js         # CRUD for workouts
+    │   ├── exercises.js        # CRUD for exercises
+    │   └── muscles.js          # GET all muscles
     ├── middleware/
-    │   └── auth.js           # JWT middleware
-    └── routes/
-        ├── token.js          # POST /api/token
-        ├── workouts.js       # CRUD /api/workouts
-        ├── exercises.js      # CRUD /api/exercises
-        └── muscles.js        # GET /api/muscles
+    │   └── auth.js             # JWT verification middleware
+    ├── migrations/
+    ├── db.js                   # PostgreSQL pool + table creation
+    ├── seed.js                 # Seed built-in exercises and muscles
+    ├── swagger.js              # Swagger config
+    └── server.js
 ```
 
 ---
@@ -105,59 +121,109 @@ tum-web-lab6/
 ## Database schema
 
 ```
-muscles          — lookup table of all muscle names
-exercises        — built-in and custom exercises
-exercise_muscles — many-to-many: exercise ↔ muscles
-workouts         — id, date, liked
-workout_exercises — links a workout to an exercise
-sets             — set_number and reps per workout_exercise
+users               exercises              muscles
+─────────           ─────────              ───────
+id (serial)         id (text)              id (text)
+email               name                   name
+password_hash       user_id → users        
+created_at          
+
+exercise_muscles    workouts               workout_exercises      sets
+────────────────    ────────               ─────────────────      ────
+exercise_id →       id (text)              id (serial)            id (serial)
+  exercises         date                   workout_id →           workout_exercise_id →
+muscle_id →         liked                    workouts               workout_exercises
+  muscles           user_id → users        exercise_id →          set_number
+                                             exercises             reps
+```
+
+Built-in exercises have `user_id = NULL` and are visible to all users. Custom exercises have a `user_id` and are only visible to their creator.
+
+---
+
+## Auth flow
+
+```
+REGISTER / LOGIN
+→ bcrypt hashes password
+→ JWT access token (15min) returned in response body
+→ JWT refresh token (7 days) set as httpOnly cookie
+
+EVERY API CALL
+→ access token sent in Authorization header
+→ if 401 → call POST /auth/refresh with cookie → get new access token → retry
+
+PAGE REFRESH
+→ access token gone from memory
+→ app calls POST /auth/refresh on mount
+→ cookie still valid → new access token → user stays logged in
+
+LOGOUT
+→ server clears cookie
+→ access token cleared from memory
+→ login page shown
 ```
 
 ---
 
-## API
+## API endpoints
 
-The REST API is documented with Swagger UI at `http://localhost:3000/docs` when running locally.
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/auth/register` | — | Register new user |
+| POST | `/api/auth/login` | — | Login, get tokens |
+| POST | `/api/auth/refresh` | cookie | Get new access token |
+| POST | `/api/auth/logout` | — | Clear refresh cookie |
+| GET | `/api/auth/me` | ✓ | Get current user info |
+| GET | `/api/workouts` | ✓ | List workouts (paginated) |
+| GET | `/api/workouts/:id` | ✓ | Get one workout |
+| POST | `/api/workouts` | ✓ | Create workout |
+| DELETE | `/api/workouts/:id` | ✓ | Delete workout |
+| PATCH | `/api/workouts/:id` | ✓ | Update liked status |
+| GET | `/api/exercises` | ✓ | List exercises (built-in + own custom) |
+| GET | `/api/exercises/:id` | ✓ | Get one exercise |
+| POST | `/api/exercises` | ✓ | Create custom exercise |
+| DELETE | `/api/exercises/:id` | ✓ | Delete own custom exercise |
+| GET | `/api/muscles` | ✓ | List all muscles |
 
-### Authentication
-All endpoints require a JWT passed as a Bearer token in the `Authorization` header. Tokens are obtained from `POST /api/token` with a role of `ADMIN` or `VISITOR`.
-
-- `ADMIN` — full CRUD access
-- `VISITOR` — read-only access
-
-### Endpoints
-```
-POST   /api/token              → get a JWT
-GET    /api/workouts           → list all workouts (paginated)
-GET    /api/workouts/:id       → get one workout
-POST   /api/workouts           → create a workout
-PATCH  /api/workouts/:id       → update a workout
-DELETE /api/workouts/:id       → delete a workout
-GET    /api/exercises          → list all exercises (paginated)
-GET    /api/exercises/:id      → get one exercise
-POST   /api/exercises          → create a custom exercise
-DELETE /api/exercises/:id      → delete an exercise
-GET    /api/muscles            → list all muscles
-```
+Full interactive docs at `/docs` (Swagger UI).
 
 ---
 
 ## Running locally
 
-### Backend
-```bash
-cd backend
-npm install
-npm run seed      # seed built-in exercises and muscles
-npm run dev       # http://localhost:3000
-                  # Swagger docs at http://localhost:3000/docs
-```
-
 ### Frontend
 ```bash
 cd gainmap
 npm install
-npm run dev       # http://localhost:5173
+npm run dev        # http://localhost:5173
 ```
 
-Both servers must be running at the same time for the app to work.
+### Backend
+```bash
+cd backend
+npm install
+cp .env.example .env   # fill in DATABASE_URL, JWT_SECRET, REFRESH_TOKEN_SECRET
+npm run dev            # http://localhost:3000
+```
+
+### Environment variables (backend)
+```
+DATABASE_URL=postgresql://...
+JWT_SECRET=your_secret
+REFRESH_TOKEN_SECRET=your_other_secret
+PORT=3000
+```
+
+---
+
+## Deployment
+
+- **Frontend** — GitHub Pages via `npm run deploy` (`gh-pages` package)
+- **Backend** — Railway (auto-deploys on push to main)
+- **Database** — Supabase (PostgreSQL, free tier)
+
+### Install as PWA on iPhone
+1. Open Safari → go to the live app URL
+2. Tap Share → "Add to Home Screen"
+3. Tap Add — appears on home screen like a native app
