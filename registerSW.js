@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/tum-web-lab6/sw.js', { scope: '/tum-web-lab6/' })})}
