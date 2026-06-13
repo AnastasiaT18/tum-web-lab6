@@ -1,5 +1,5 @@
-// const BASE_URL = 'https://tum-web-lab6-production.up.railway.app/api';
-const BASE_URL = 'http://localhost:3000/api';
+const BASE_URL = 'https://tum-web-lab6-production.up.railway.app/api';
+// const BASE_URL = 'http://localhost:3000/api';
 
 
 let accessToken = null;  
