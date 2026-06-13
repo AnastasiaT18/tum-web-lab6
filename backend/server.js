@@ -6,7 +6,6 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
 
 const authRoute = require('./routes/auth');
-const tokenRoute = require('./routes/token');  
 const workoutsRoute = require('./routes/workouts');
 const exerciseRoute = require('./routes/exercises');
 const musclesRoute = require('./routes/muscles');
@@ -18,8 +17,8 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cookieParser());
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://anastasiat18.github.io/tum-web-lab6/'],
-  credentials: true  // ← allows cookies to be sent cross-origin
+  origin: ['http://localhost:5173', 'https://anastasiat18.github.io'],
+  credentials: true
 }));
 
 app.use(express.json());
@@ -27,7 +26,6 @@ app.use(express.json());
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/api/auth', authRoute);
-app.use('/api', tokenRoute);
 app.use('/api/workouts', workoutsRoute);
 app.use('/api/exercises', exerciseRoute);
 app.use('/api/muscles', musclesRoute);
